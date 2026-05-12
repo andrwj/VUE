@@ -45,11 +45,11 @@ import javax.swing.plaf.ColorUIResource;
 //public class VueAquaLookAndFeel extends com.jidesoft.plaf.aqua.AquaJideLookAndFeel { // JIDE
 public class VueAquaLookAndFeel extends apple.laf.AquaLookAndFeel
 {
-    public final static Font SystemFont = new Font("Lucida Grande", Font.PLAIN, 13);
-    public final static Font SmallSystemFont = new Font("Lucida Grande", Font.PLAIN, 11);
-    public final static Font SmallSystemFont12 = new Font("Lucida Grande", Font.PLAIN, 12);
-    public final static Font MiniSystemFont = new Font("Lucida Grande", Font.PLAIN, 9);
-    public final static Font EmphasizedMiniSystemFont = new Font("Lucida Grande", Font.BOLD, 9);
+    public final static Font SystemFont = new Font("Pretendard Variable", Font.PLAIN, 13);
+    public final static Font SmallSystemFont = new Font("Pretendard Variable", Font.PLAIN, 11);
+    public final static Font SmallSystemFont12 = new Font("Pretendard Variable", Font.PLAIN, 12);
+    public final static Font MiniSystemFont = new Font("Pretendard Variable", Font.PLAIN, 9);
+    public final static Font EmphasizedMiniSystemFont = new Font("Pretendard Variable", Font.BOLD, 9);
 
     public String getDescription() { return super.getDescription() + " (VUE Derivative)"; }
     public void initComponentDefaults(UIDefaults table)

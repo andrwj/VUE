@@ -926,9 +926,7 @@ public abstract class LWIcon extends Rectangle2D.Float
             // Resource icon special case can override parent set width:
             if (super.width < row.width)
                 super.width = row.width;
-            final float xoff = (super.width - row.width) / 2;
-            final float yoff = (super.height - row.height) / 2;
-            row.draw(dc, xoff, yoff);
+            drawResourceLabel(dc.g, row);
 
 //             // an experiment in semantic zoom
 //             //if (dc.zoom >= 8.0 && mLWC.hasResource()) {
@@ -940,7 +938,28 @@ public abstract class LWIcon extends Rectangle2D.Float
 
             dc.g.translate(-x, -y);
           //MK  System.out.println("K");
-           
+          
+        }
+
+        private void drawResourceLabel(Graphics2D g, TextRow row)
+        {
+            final FontMetrics metrics = g.getFontMetrics(FONT_ICON);
+            final String text = row.text;
+            final float localBoxX = (float) (boxBounds.x - getX());
+            final float localBoxY = (float) (boxBounds.y - getY());
+            final int textWidth = metrics.stringWidth(text);
+            final float xoff;
+
+            if (textWidth <= boxBounds.width)
+                xoff = localBoxX + ((float) boxBounds.width - textWidth) / 2f;
+            else
+                xoff = (super.width - textWidth) / 2f;
+
+            float baseline = localBoxY + ((float) boxBounds.height - metrics.getHeight()) / 2f + metrics.getAscent();
+            if (mLWC instanceof LWNode)
+                baseline += 1f;
+
+            g.drawString(text, xoff, baseline);
         }
         
     }

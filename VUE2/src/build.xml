@@ -41,7 +41,7 @@
   These properties generally define file and directory names (or paths) that
   affect where the build process stores its outputs.
 -->
-  <property name="version"     value="4.0.0"/>
+  <property name="version"     value="4.1.0"/>
   <property name="top.dir"     value="./.."/>
   <property name="top"     value=".."/>
   <property name="src"         value="${basedir}"/>
@@ -63,7 +63,7 @@
   <property name="test.home"   value="${top.dir}/test" />
   <property name="test.lib"   value="${test.home}/lib" />
   <property name="junit.jar"   value="${test.lib}/junit.jar" />
-  <property name="target.version" value="1.6"/>
+  <property name="target.version" value="1.8"/>
   <property name="MacDist" value="MacDist"/>
   <property name="MacDist16" value="MacDist16"/>
   <property name="jre.home" value="/usr/local/atsys/jenkins/jre/jre7"/>
@@ -72,8 +72,6 @@
        the classpath if it's called anything with "NarraVision" in the
        name to decide if it should run with MIT features -->
   <property name="vue.jar"              value="${build.home}/VUE.jar"/>
-  <property name="vueapplet.jar"        value="${build.home}/VUEApplet.jar"/>
-	<property name="vueapplet-pack.jar"        value="${build.home}/VUEApplet.pack"/>
   <property name="vue-linux.jar"        value="${build.home}/VUE-linux.jar"/>
   <property name="narravision.jar"      value="${build.home}/NarraVision.jar"/>
 	
@@ -148,9 +146,6 @@
   		2009-01-26 MK: Added the gdata client, because of an OSID classpath problem, the gdata stuff uses .getPackage which 
   		inturn uses VUE's classloader instead of the OSID's classloader so the classes need to be in VUE in order
   		to work properly-->
-	<property name="applet.jarfiles.names"
-		value="castor-1.3-xml.jar"
-	/>
 	<property name="thirdparty.jarfiles.names.extendedFeatures"
 		value="MERLOTOsid-1.0.jar			   
 	  		  batik-all.jar
@@ -183,7 +178,6 @@
 			    activation_unsigned.jar"/>
   <property name="thirdparty.jarfiles.names"
             value="xercesImpl-2.7.1.jar
-                   joscar-0.9.3-bin.jar
                    miglayout-3.7.2-swing.jar
                    jaxrpc-api-unsigned.jar
                    jaxrpc-impl-unsigned.jar
@@ -297,7 +291,6 @@
        -->
   <property name="thirdparty.jarfiles.names.minimal"
             value="okiOSID-2.0a.jar
-				          joscar-0.9.3-bin.jar
                   apache-commons.jar
                   axis_1_5_3.jar
                   commons-httpclient-3.1-beta1.jar      
@@ -354,7 +347,6 @@
   	<pathelement path="${lib.home}/XmlfileRepositoryOSID-1.0.jar"/>
   	<pathelement path="${lib.home}/TuftsOsidProvider.jar"/>
   	<pathelement path="${lib.home}/json.jar"/>
-  	<pathelement path="${lib.home}/joscar-0.9.3-bin.jar"/>
 	  <pathelement path="${lib.home}/AlchemyAPI.jar"/>
   	<pathelement path="${lib.home}/calais.jar"/>
     <pathelement path="${lib.home}/VUE-MacOSX.jar"/>
@@ -851,149 +843,6 @@
       <fileset dir="${build.class}"/>
     </jar>
   </target>
-  <target name="jar-core-applet"
-     depends="compile,compile-linux"
-	 description="Create VUE-core.jar - a jar file containing all the VUE classes, resources and config files from the CVS tree.">
-	 <echo message="build.class is ${build.class}"/>
-	 <antcall target="run-jar-core-applet"/>
-  </target>
-  <target name="run-jar-core-applet">
-    <jar zipfile="${vue-core.jar}" update="false" compress="true" index="true" duplicate="preserve">
-      <fileset dir="${src}">
-        <!-- exclude data/narravision?  2mb of meta-data... -->
-        <exclude name="**/old/**"/>
-        <exclude name="**/tmp/**"/>
-        <exclude name="altView/**"/>
-        <exclude name="build.xml"/>
-      	<exclude name="test/**"/>
-      	<exclude name="linux/**"/>
-      	<exclude name="data.narravision/**"/>
-      	<exclude name="MacOS/**"/>      
-      	<exclude name="maclib/**"/>
-      	<exclude name="java15/**"/>
-        <include name="**/*.xml"/>
-        <include name="**/*.conf"/>
-        <include name="**/*.css"/>
-        <include name="**/*.rdfs" />
-        <include name="**/*.rdf" />
-        <include name="**/*.owl" />
-        <include name="**/*.properties"/>
-        <include name="tufts/vue/resources/**"/>
-        <include name="tufts/vue/images/**"/>
-        <include name="tufts/vue/gui/icons/**"/>
-      </fileset>
-      <fileset dir="${build.class}">
-    	<exclude name="edu/tufts/osidimpl/**"/>
-      </fileset>
-      <indexjars>
-      	<fileset dir="${lib.home}"/>	
-      </indexjars>
-    </jar>
-  </target>	
-  <target name="sign-applet-jars">
- 	<signjar
-	  	alias="mykey"
-	  	storepass="vuevue"
-	  	keystore="${keystore}"
-	  	jar="${vue-core.jar}">
-	</signjar>
-  	<signjar
-  		alias="mykey"
-  		storepass="vuevue"
-  		keystore="${keystore}"
-  		jar="${vue.jar}">
-    </signjar>
-  	<signjar
-  	  alias="mykey"
-  	  storepass="vuevue"
-  	  keystore="${keystore}"
-  	  jar="../lib/google-collect-snapshot-20090211.jar">
-  	</signjar>
-  	<signjar
-  	  alias="mykey"
-  	  storepass="vuevue"
-  	  keystore="${keystore}"
-  	  jar="../lib/jaxrpc-api-unsigned.jar">
-  	</signjar>
-  	<signjar
-  	  alias="mykey"
-  	  storepass="vuevue"
-  	  keystore="${keystore}"
-  	  jar="../lib/MITAuthenticationTypes.jar">
-  	</signjar>
-  	<signjar
-  	  alias="mykey"
-  	  storepass="vuevue"
-  	  keystore="${keystore}"
-  	  jar="../lib/MITRepositoryTypes.jar">
-  	</signjar>
-  	<signjar
-  	  alias="mykey"
-  	  storepass="vuevue"
-  	  keystore="${keystore}"
-  	  jar="../lib/jena-2.5.3.jar">
-  	</signjar>
-  	<signjar
-  	  alias="mykey"
-  	  storepass="vuevue"
-  	  keystore="${keystore}"
-  	  jar="../lib/OsidProvider.jar">
-  	</signjar>
-  	<signjar
-  	  alias="mykey"
-  	  storepass="vuevue"
-  	  keystore="${keystore}"
-  	  jar="../lib/commons-discovery.jar">
-  	</signjar>
-  	<signjar
-  	  alias="mykey"
-  	  storepass="vuevue"
-  	  keystore="${keystore}"
-  	  jar="../lib/castor-1.3-core.jar">
-  	</signjar>
-  	<signjar
-  	  alias="mykey"
-  	  storepass="vuevue"
-  	  keystore="${keystore}"
-  	  jar="../lib/castor-1.3-xml.jar">
-  	</signjar>
- 	<signjar
-  	  alias="mykey"
-  	  storepass="vuevue"
-  	  keystore="${keystore}"
-  	  jar="../lib/xercesImpl-2.7.1.jar">
-	</signjar>
-  	<signjar
-  	  alias="mykey"
-  	  storepass="vuevue"
-  	  keystore="${keystore}"
-  	  jar="../lib/commons-logging.jar">
-    </signjar>
-  	<signjar
-  	  alias="mykey"
-  	  storepass="vuevue"
-  	  keystore="${keystore}"
-  	  jar="../lib/commons-lang-2.4.jar">
-    </signjar>
-  	<signjar
-  	  alias="mykey"
-  	  storepass="vuevue"
-  	  keystore="${keystore}"
-  	  jar="../lib/MITSearchTypes.jar">
-  	</signjar>
-  	<signjar
-      alias="mykey"
-  	  storepass="vuevue"
-  	  keystore="${keystore}"
-  	  jar="../lib/VUE-MacOSX.jar">
-    </signjar>
-  	<signjar
-      alias="mykey"
-      storepass="vuevue"
-      keystore="${keystore}"
-  	  jar="../lib/looks-2.1.4.jar">
-    </signjar>
-  </target>
   <target name="run-jar-core-old">
     <jar zipfile="${vue-core.jar}" update="true" compress="false" index="true">
       <fileset dir="${src}" includes="**/*.xml"/>
@@ -1155,50 +1004,6 @@
   </target>
      
   <target name="all" depends="clean,mac-dist,linux-jar" description="Rebuild everything from scratch."/>
-  <target name="vue-applet" depends="jar-core">
-	
-
-  	    <tstamp/>
-  	    <echo message="Building ${vueapplet.jar}..."/>
-  	    <jar destfile="${vueapplet.jar}" compress="true" index="true" update="false" duplicate="preserve">
-  	        <manifest>
-  	        <attribute name="Description" value="Tufts VUE 3.x (Visual Understanding Environment)"/>
-  	        <attribute name="Built-By" value="${user.name}"/>
-  	        <attribute name="Built" value="${TODAY} ${TSTAMP}"/>
-  	        <attribute name="Build-Platform" value="${os.name} ${os.version} ${os.arch}"/>
-  	        <attribute name="Main-Class" value="tufts.vue.VUE"/>
-  	      </manifest>
-  	        <!-- zipfileset src="${basedir}/VUE-core.jar" excludes="**/*.properties"/ example excludes that works for one file -->
-  	        <zipfileset src="${vue-core.jar}"/>
-  	        <zipgroupfileset dir="${lib.home}" includes="${thirdparty.jarfiles.names}"
-  	        	excludes="org/apache/tools/ant/**"/>
-  	        <!-- may be able to modify this to exclude README's, .txt files, etc -->
-  	    </jar>
-  	    <jar jarfile="${vueapplet.jar}"
-  	         basedir="${basedir}" 
-  			 update="true"
-  	         includes="osid.properties"/>
-  	  	 
-  	  
-
-
-  	<signjar
-  	    alias="mykey"
-  	    storepass="vuevue"
-  		keystore="${keystore}"
-  		jar="${vueapplet.jar}">
-  	</signjar>
-  	
-  	<!--
-    <pack200 src="${vueapplet.jar}"
-    		 destfile="${vue-pack.jar}"
-    		 effort="9"
-    	 	 modificationtime="latest"
-    		 deflatehint="false"
-    		 unknownattribute="error"
-  			 verbose="1"
- 	/> -->
-  </target>
   <target name="mac" depends="clean,mac-dist"/>
 
   <target name="clean"
@@ -1252,6 +1057,20 @@
                 copyright="2003-2020"
                 applicationCategory="public.app-category.finance">
                 <classpath file="${build.home}/VUE.jar"/>
+                <bundleDocument
+                  name="VUE Concept Map"
+                  role="Editor"
+                  handlerRank="Owner"
+                  extensions="vue,vpk"
+                  contentTypes="edu.tufts.vue.map"
+                  icon="MacOS/VUE.icns"/>
+                <typeDeclaration
+                  identifier="edu.tufts.vue.map"
+                  description="VUE Concept Map"
+                  conformsTo="public.xml"
+                  extensions="vue,vpk"
+                  mimeTypes="application/x-vue"
+                  icon="MacOS/VUE.icns"/>
                 <option value="-Dapple.laf.useScreenMenuBar=true"/>
                 <option value="-Dcom.apple.macos.use-file-dialog-packages=true"/>
                 <option value="-Dcom.apple.macos.useScreenMenuBar=true"/>
@@ -1263,6 +1082,8 @@
                 
 
       </bundleapp>
+      <copy file="${universalstub}" tofile="build/${MacDist}/VUE.app/Contents/MacOS/VUE" overwrite="true"/>
+      <chmod file="build/${MacDist}/VUE.app/Contents/MacOS/VUE" perm="755"/>
   </target>
 
     <target name="test" depends="mac-dist"/>
@@ -1443,17 +1264,12 @@ cclass Version {
  	</target>
 	
     <!-- Tasks to create releases for VUE -->
-    <target name="release" depends="clean,mac-dist,linux-jar,vue-applet,zotero">
+    <target name="release" depends="clean,mac-dist,linux-jar,zotero">
         <delete dir="${release.home}"/>
         <mkdir dir="${release.home}"/>
         <zip destfile="${release.home}/VUE.zip">
             <zipfileset dir="${build.home}" includes="VUE.jar" filemode="755"/>
          </zip>
-    	 <zip destfile="${release.home}/VUEApplet.zip">
-    	            <zipfileset dir="${build.home}" includes="VUEApplet.jar" prefix="vueapplet" filemode="755"/>
-    	 			<zipfileset dir="${build.home}/../../applet-samplehtml/" includes="**/*.*" prefix="vueapplet" filemode="755"/>
-    	  </zip>
-        <checksum file="${release.home}/VUEApplet.zip" property="appletMD5"/>
          <checksum file="${release.home}/VUE.zip" property="genericMD5"/>
          <zip destfile="${release.home}/VUE.app.zip">
            <zipfileset dir="${build.home}/${MacDist}"  includes="**/VUE.app/**" filemode="755"/>
@@ -1481,7 +1297,6 @@ VUE.zip - ${genericMD5}
 VUE.app.zip- ${macMD5}
 VUE-Java16.app.zip- ${mac16MD5}
 VUE_src.zip - ${srcMD5}     
-VUEApplet.zip - ${appletMD5}
         </echo>
     </target>
     
@@ -1504,7 +1319,6 @@ VUEApplet.zip - ${appletMD5}
             <zipfileset dir="${basedir}/installer/" includes="VUE.exe" filemode="755"/>
          </zip>
 	 
-         <checksum file="${release.home}/VUEApplet.zip" property="appletMD5"/>
          <checksum file="${release.home}/VUE.zip" property="genericMD5"/>
          <checksum file="${release.home}/VUE.app.zip" property="macMD5"/>
          <checksum file="${release.home}/VUE_src.zip" property="srcMD5"/>
@@ -1513,7 +1327,6 @@ VUEApplet.zip - ${appletMD5}
 VUE.zip - ${genericMD5}
 VUE.app.zip- ${macMD5}
 VUE_src.zip - ${srcMD5}     
-VUEApplet.zip - ${appletMD5}
         </echo>
    	<copy file="../ZoteroFFExtension/dist/VUEZoteroFireFoxExtension.xpi" todir="${release.home}"/>
 

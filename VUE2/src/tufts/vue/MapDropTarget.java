@@ -1193,8 +1193,17 @@ public class MapDropTarget
         Map props = new HashMap();
 
         if ((DEBUG.IO || DEBUG.DND) && !file.exists()) examineBadFile(file);
+
+        final String lowerPath = path.toLowerCase();
+        if (lowerPath.endsWith(".vue") || lowerPath.endsWith(".vpk")) {
+            Log.info("opening dropped VUE map file " + file);
+            GUI.invokeAfterAWT(new Runnable() { public void run() {
+                VUE.displayMap(file);
+            }});
+            return;
+        }
         
-        if (path.toLowerCase().endsWith(".url")) {
+        if (lowerPath.endsWith(".url")) {
             // Search a windows .url file (an internet shortcut)
             // for the actual web reference.
             String url = convertWindowsURLShortCutToURL(file);

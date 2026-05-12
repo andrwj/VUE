@@ -50,7 +50,7 @@ public class VueUtil extends tufts.Util
     private static final org.apache.log4j.Logger Log = org.apache.log4j.Logger.getLogger(VueUtil.class);
     
     public static final String DEFAULT_WINDOWS_FOLDER = "vue_2";
-    public static final String DEFAULT_MAC_FOLDER = ".vue_2";
+    public static final String DEFAULT_MAC_FOLDER = ".vue";
     public static final String VueExtension = VueResources.getString("vue.extension", ".vue");
     public static final String VueArchiveExtension = VueResources.getString("vue.archive.extension", ".vpk");
     private static String currentDirectoryPath = "";
@@ -131,23 +131,11 @@ public class VueUtil extends tufts.Util
             }
         }
 
-        if (VUE.isApplet()) {
-            java.net.URL url = null;
-            try {
-                url = new java.net.URL(platformURL);
-                System.out.println("Applet URL display: " + url);
-                VUE.getAppletContext().showDocument(url, "_blank");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
+        // already handled in Util.openURL
+        //if (isMacPlatform() && platformURL.startsWith("/"))
+        //    platformURL = "file:" + platformURL;
 
-            // already handled in Util.openURL
-            //if (isMacPlatform() && platformURL.startsWith("/"))
-            //    platformURL = "file:" + platformURL;
-                
-            tufts.Util.openURL(platformURL);
-        }
+        tufts.Util.openURL(platformURL);
     }
     
     public static void  setCurrentDirectoryPath(String cdp) {
@@ -169,11 +157,8 @@ public class VueUtil extends tufts.Util
     	
         File userHome = null;
         
-        if (VUE.isApplet())
-        	userHome = new File(VUE.getSystemProperty("user.home"));
-        else
         {
-        	String userHomeString = System.getenv("VUEUSERHOME");
+            String userHomeString = System.getenv("VUEUSERHOME");
         	
         	if (userHomeString ==null || (userHomeString !=null && userHomeString.length() <1))
             	userHome = new File(VUE.getSystemProperty("user.home"));
@@ -1145,4 +1130,3 @@ class VOptionPane extends JOptionPane
 		return result;
         }
 }
-

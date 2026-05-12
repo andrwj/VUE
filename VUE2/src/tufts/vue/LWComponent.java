@@ -1067,7 +1067,7 @@ public class LWComponent
             final Font font = get();
             String strStyle;
 
-            if (font.isBold()) {
+            if (LWComponent.this.mFontWeight.get() >= 700 || font.isBold()) {
                 strStyle = font.isItalic() ? "bolditalic" : "bold";
             } else {
                 strStyle = font.isItalic() ? "italic" : "plain";
@@ -1087,14 +1087,21 @@ public class LWComponent
     public class CSSFontStyleProperty extends IntProperty {
         CSSFontStyleProperty(Key key) { super(key); }
         void setFromCSS(String cssKey, String value) {
-            // todo: this ignoring the key, which will permit non-confomant CSS
-            if ("italic".equalsIgnoreCase(value))
+            if ("italic".equalsIgnoreCase(value)) {
                 set(java.awt.Font.ITALIC);
-            else if ("bold".equalsIgnoreCase(value))
-                set(java.awt.Font.BOLD);
-            else
+            } else if ("bold".equalsIgnoreCase(value)) {
+                LWComponent.this.mFontWeight.set(700);
+                set(get() | java.awt.Font.BOLD);
+            } else {
                 set(0);
+            }
         }
+    }
+
+    public class CSSFontWeightProperty extends IntProperty {
+        CSSFontWeightProperty(Key key) { super(key, new Integer(FONT_WEIGHT_DEFAULT)); }
+        void setBy(String s) { set(new Integer(normalizeFontWeight(Integer.parseInt(s)))); }
+        void setFromCSS(String cssKey, String value) { set(parseCSSFontWeight(value)); }
     }
 
     /*
@@ -1281,14 +1288,130 @@ public class LWComponent
         ("alignment", KeyType.STYLE)   { final Property getSlot(LWComponent c) { return c.mAlignment; } };
 
 
+    public static final int FONT_WEIGHT_MIN = 100;
+    public static final int FONT_WEIGHT_MAX = 900;
+    public static final int FONT_WEIGHT_STEP = 100;
+    public static final int FONT_WEIGHT_DEFAULT = 400;
+
+    private static final float[] TextAttributeWeights = {
+        0.5f,   // 100
+        0.75f,  // 200
+        0.875f, // 300
+        1.0f,   // 400
+        1.25f,  // 500
+        1.5f,   // 600
+        1.75f,  // 700
+        2.0f,   // 800
+        2.75f   // 900
+    };
+
+    private static final String[] PretendardVariableFontNames = {
+        "PretendardVariable-Thin",
+        "PretendardVariable-ExtraLight",
+        "PretendardVariable-Light",
+        "PretendardVariable-Regular",
+        "PretendardVariable-Medium",
+        "PretendardVariable-SemiBold",
+        "PretendardVariable-Bold",
+        "PretendardVariable-ExtraBold",
+        "PretendardVariable-Black"
+    };
+
+    private static final String[] PretendardFontNames = {
+        "Pretendard-Thin",
+        "Pretendard-ExtraLight",
+        "Pretendard-Light",
+        "Pretendard-Regular",
+        "Pretendard-Medium",
+        "Pretendard-SemiBold",
+        "Pretendard-Bold",
+        "Pretendard-ExtraBold",
+        "Pretendard-Black"
+    };
+
+    public static int normalizeFontWeight(int weight) {
+        if (weight < FONT_WEIGHT_MIN)
+            return FONT_WEIGHT_MIN;
+        if (weight > FONT_WEIGHT_MAX)
+            return FONT_WEIGHT_MAX;
+        return ((weight + 50) / FONT_WEIGHT_STEP) * FONT_WEIGHT_STEP;
+    }
+
+    public static int nextFontWeight(int weight) {
+        weight = normalizeFontWeight(weight);
+        return weight >= FONT_WEIGHT_MAX ? FONT_WEIGHT_MIN : weight + FONT_WEIGHT_STEP;
+    }
+
+    public static int previousFontWeight(int weight) {
+        weight = normalizeFontWeight(weight);
+        return weight <= FONT_WEIGHT_MIN ? FONT_WEIGHT_MAX : weight - FONT_WEIGHT_STEP;
+    }
+
+    private static float textAttributeWeight(int weight) {
+        final int normalized = normalizeFontWeight(weight);
+        return TextAttributeWeights[(normalized - FONT_WEIGHT_MIN) / FONT_WEIGHT_STEP];
+    }
+
+    private static String fontNameForWeight(String fontName, int weight) {
+        if (fontName == null)
+            return fontName;
+
+        final String lower = fontName.toLowerCase(Locale.US);
+        final int weightIndex = (normalizeFontWeight(weight) - FONT_WEIGHT_MIN) / FONT_WEIGHT_STEP;
+
+        if (lower.equals("pretendard variable") || lower.startsWith("pretendardvariable"))
+            return PretendardVariableFontNames[weightIndex];
+        if (lower.equals("pretendard") || lower.startsWith("pretendard-"))
+            return PretendardFontNames[weightIndex];
+
+        return fontName;
+    }
+
+    private static int fontWeightFromTextAttribute(float weight) {
+        int closest = FONT_WEIGHT_DEFAULT;
+        float closestDistance = Float.MAX_VALUE;
+        for (int i = 0; i < TextAttributeWeights.length; i++) {
+            final float distance = Math.abs(TextAttributeWeights[i] - weight);
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closest = FONT_WEIGHT_MIN + (i * FONT_WEIGHT_STEP);
+            }
+        }
+        return closest;
+    }
+
+    private static int fontWeightFromFont(Font font) {
+        final Object weight = font.getAttributes().get(TextAttribute.WEIGHT);
+        if (weight instanceof Number)
+            return fontWeightFromTextAttribute(((Number) weight).floatValue());
+        if (font.isBold())
+            return 700;
+        return FONT_WEIGHT_DEFAULT;
+    }
+
+    private static int parseCSSFontWeight(String value) {
+        if ("bold".equalsIgnoreCase(value))
+            return 700;
+        if ("normal".equalsIgnoreCase(value))
+            return FONT_WEIGHT_DEFAULT;
+
+        try {
+            return normalizeFontWeight(Integer.parseInt(value));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("unhandled CSS font-weight [" + value + "]");
+        }
+    }
+
     /* font.size: point size for font */
-    /* font.style: @See java.awt.Font 0x0=Plain, 0x1=Bold On, 0x2=Italic On */
+    /* font.style: @See java.awt.Font 0x0=Plain, 0x2=Italic On. Legacy bold bits are migrated to font.weight. */
+    /* font.weight: CSS-style weight, 100 through 900 */
     /* font.name: family name of the font */
 
     /** Aggregate font key, which represents the combination of it's three sub-properties */
     public static final Key KEY_Font = new Key("font", KeyType.STYLE)                   { final Property getSlot(LWComponent c) { return c.mFont; } };
     public static final Key KEY_FontSize  = new Key("font.size", KeyType.SUB_STYLE)     { final Property getSlot(LWComponent c) { return c.mFontSize; } };
-    public static final Key KEY_FontStyle = new Key("font.style", KeyType.SUB_STYLE)    { final Property getSlot(LWComponent c) { return c.mFontStyle; } };
+    public static final Key KEY_FontStyle = new Key("font.style", "font-style", KeyType.SUB_STYLE)    { final Property getSlot(LWComponent c) { return c.mFontStyle; } };
+    public static final Key KEY_FontWeight = new Key("font.weight", "font-weight", KeyType.SUB_STYLE) { final Property getSlot(LWComponent c) { return c.mFontWeight; } };
     public static final Key KEY_FontUnderline = new Key("font.underline", KeyType.SUB_STYLE)    { final Property getSlot(LWComponent c) { return c.mFontUnderline; } };
     public static final Key KEY_FontName  = new Key("font.name", KeyType.SUB_STYLE)     { final Property getSlot(LWComponent c) { return c.mFontName; } };
 
@@ -1387,6 +1510,9 @@ public class LWComponent
 
 
     public final IntProperty mFontStyle = new CSSFontStyleProperty(KEY_FontStyle)       { void onChange() { rebuildFont(); } };
+    public final IntProperty mFontWeight = new CSSFontWeightProperty(KEY_FontWeight) {
+        void onChange() { rebuildFont(); }
+    };
     public final IntProperty mFontSize = new IntProperty(KEY_FontSize)                  { void onChange() { rebuildFont(); } };
     public final StringProperty mFontName = new CSSFontFamilyProperty(KEY_FontName)     { void onChange() { rebuildFont(); } };
 
@@ -1410,7 +1536,16 @@ public class LWComponent
         // This so at least for now we have backward compat with the old font property (esp. for tools & persistance)
     	fontIsRebuilding = true;
         try  {
-            Font f =new Font(mFontName.get(), mFontStyle.get(), mFontSize.get());
+            final int fontStyle = mFontStyle.get();
+            int fontWeight = mFontWeight.get();
+            if ((fontStyle & Font.BOLD) != 0 && fontWeight < 700)
+                fontWeight = 700;
+
+            final String fontName = fontNameForWeight(mFontName.get(), fontWeight);
+            Font f = new Font(fontName, fontStyle & Font.ITALIC, mFontSize.get());
+            Map attributes = new HashMap(f.getAttributes());
+            attributes.put(TextAttribute.WEIGHT, new Float(textAttributeWeight(fontWeight)));
+            f = f.deriveFont(attributes);
             mFont.set(f);
 
         } finally {
@@ -1424,7 +1559,7 @@ public class LWComponent
                     final Font f = get();
 
                     mFontStyle.take(f.getStyle());
-
+                    mFontWeight.take(fontWeightFromFont(f));
                     mFontSize.take(f.getSize());
                     mFontName.take(f.getName());
                 }
@@ -3329,6 +3464,8 @@ public class LWComponent
     public void         setFont(Font font)      { mFont.set(font); }
     public String       getXMLfont()            { return mFont.asString(); }
     public void         setXMLfont(String xml)  { mFont.setFromString(xml); }
+    public String       getXMLfontWeight()      { return String.valueOf(normalizeFontWeight(mFontWeight.get())); }
+    public void         setXMLfontWeight(String xml) { mFontWeight.setFromString(xml); }
 
 
 

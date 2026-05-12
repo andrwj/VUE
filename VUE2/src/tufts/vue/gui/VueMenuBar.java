@@ -63,7 +63,6 @@ import tufts.vue.RecentlyOpenedFilesManager;
 import tufts.vue.Resource;
 import tufts.vue.VUE;
 import tufts.vue.VueAction;
-import tufts.vue.VueApplet;
 import tufts.vue.VueConstants;
 import tufts.vue.VueResources;
 import tufts.vue.VueTool;
@@ -509,10 +508,6 @@ public class VueMenuBar extends javax.swing.JMenuBar
         fileMenu.addSeparator();        
         fileMenu.add(saveAction).setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, metaMask));
         fileMenu.add(saveAsAction).setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, metaMask+Event.SHIFT_MASK));                
-        if (VUE.isApplet() && VueApplet.isZoteroApplet())
-        {
-        	fileMenu.add(Actions.SaveCopyToZotero);
-        }
         fileMenu.add(Actions.Revert);
         Actions.Revert.setEnabled(false);
         fileMenu.addSeparator();
@@ -716,6 +711,7 @@ public class VueMenuBar extends javax.swing.JMenuBar
         transformMenu.add(Actions.FontBigger);
         transformMenu.add(Actions.FontSmaller);
         transformMenu.add(Actions.FontBold);
+        transformMenu.add(Actions.FontWeightSmaller);
         transformMenu.add(Actions.FontItalic);      
         transformMenu.add(Actions.FontUnderline);
         formatMenu.add(buildMenu("menu.node",Actions.NODE_FORMAT_MENU_ACTIONS));
@@ -1407,4 +1403,3 @@ public class VueMenuBar extends javax.swing.JMenuBar
 	}
 
 }
-

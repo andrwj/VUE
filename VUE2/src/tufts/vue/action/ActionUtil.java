@@ -893,8 +893,11 @@ public class ActionUtil
             } else {
 
                 // No local file was found: it must have been a remote URL
-            
-                if (allowRedirects) {
+
+                final String protocol = url.getProtocol();
+                final boolean httpURL = "http".equalsIgnoreCase(protocol) || "https".equalsIgnoreCase(protocol);
+
+                if (allowRedirects && httpURL) {
                     final URL redirectURL = tufts.vue.UrlAuthentication.getRedirectedUrl(url, 10); // number of redirects to follow
                     url = redirectURL;
                      file = new File(url.getFile());
@@ -908,10 +911,11 @@ public class ActionUtil
                     // url = redirectURL;
                 }
                 
+                final InputStream stream = httpURL ? UrlAuthentication.getAuthenticatedStream(url) : url.openStream();
                 if (charsetEncoding != null)
-                    reader = new InputStreamReader(UrlAuthentication.getAuthenticatedStream(url), charsetEncoding);
+                    reader = new InputStreamReader(stream, charsetEncoding);
                 else
-                    reader = new InputStreamReader(UrlAuthentication.getAuthenticatedStream(url)); // could default to UTF-8
+                    reader = new InputStreamReader(stream); // could default to UTF-8
 
  
             }
@@ -1312,7 +1316,7 @@ class MapUnmarshalHandler implements UnmarshalListener {
     /** This must be called in sequence after notifyFile */
     void notifyVersionOfVueThatSavedMap(String savingVersion)
     {
-        final String fileName = file.getName();
+        final String fileName = file == null ? String.valueOf(source) : file.getName();
 
         if (map.getModelVersion() > LWMap.getCurrentModelVersion()) {
             VueUtil.alert(String.format(Locale.getDefault(),

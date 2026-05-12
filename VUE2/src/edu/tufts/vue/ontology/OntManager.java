@@ -181,6 +181,9 @@ public class OntManager
         if(ontManager != null) {
             try {
                 File file = new File(tufts.vue.VueUtil.getDefaultUserFolder()+File.separator+ONT_FILE);
+                File parent = file.getParentFile();
+                if (parent != null && !parent.exists())
+                    parent.mkdirs();
                 Mapping mapping = new Mapping();
                 FileWriter writer = new FileWriter(file);
                 Marshaller marshaller = new Marshaller(writer);
@@ -201,12 +204,16 @@ public class OntManager
         try {
             Unmarshaller unmarshaller = tufts.vue.action.ActionUtil.getDefaultUnmarshaller();
             File file = new File(tufts.vue.VueUtil.getDefaultUserFolder()+File.separator+ONT_FILE);
+            if (!file.exists()) {
+                Log.info("OntManager.load: no saved ontology file yet: " + file);
+                return;
+            }
             FileReader reader = new FileReader(file);
             ontManager = (OntManager) unmarshaller.unmarshal(new InputSource(reader));
             loadSavedOntTypes() ;
             reader.close();
         } catch(Exception ex) {
-            Log.error("OntManager.save: "+ex);
+            Log.error("OntManager.load: "+ex);
         }
     }
     public  static OntManager getOntManager() {

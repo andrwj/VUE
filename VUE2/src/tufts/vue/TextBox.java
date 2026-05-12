@@ -463,7 +463,7 @@ public class TextBox extends JTextPane
     {
     	if (DEBUG.TEXT)
     		System.out.println("setFontAttribnutes " + f);
-        StyleConstants.setFontFamily(a, f.getFamily());
+        StyleConstants.setFontFamily(a, f.getFontName());
         StyleConstants.setFontSize(a, f.getSize());
         StyleConstants.setItalic(a, f.isItalic());
         StyleConstants.setBold(a, f.isBold());

@@ -5360,11 +5360,6 @@ public class MapViewer extends TimedASComponent//javax.swing.JComponent
         sSinglePopup.add(GUI.buildMenu(VueResources.getString("menu.arrange"), Actions.ARRANGE_MENU_ACTIONS));
         sSinglePopup.add(GUI.buildMenu(VueResources.getString("menu.layout"),LayoutAction.LAYOUT_ACTIONS));
 
-    	if (VUE.isApplet() && VueApplet.isZoteroApplet() && r!=null) {
-        	sSinglePopup.addSeparator();
-    		sSinglePopup.add(Actions.AddResourceToZotero);
-    	}
-
     	sSinglePopup.addSeparator();
     	
     	//sSinglePopup.add(AnalyzerAction.calais);
@@ -5990,6 +5985,7 @@ public class MapViewer extends TimedASComponent//javax.swing.JComponent
         int dragControlIndex;
         boolean mouseWasDragged = false;
         boolean mouseDragInitiated = false;
+        boolean systemDragInitiated = false;
         LWComponent justSelected;    // for between mouse press & click
         boolean hitOnSelectionHandle = false; // we moused-down on a selection handle
 
@@ -6040,6 +6036,7 @@ public class MapViewer extends TimedASComponent//javax.swing.JComponent
     private void clearMouse() {
         mouseWasDragged = false;
         mouseDragInitiated = false;
+        systemDragInitiated = false;
     }
     
         
@@ -7523,6 +7520,9 @@ public class MapViewer extends TimedASComponent//javax.swing.JComponent
             if (mouseConsumed)
                 return;
 
+            if (systemDragInitiated)
+                return;
+
             clearRollover();
             //System.out.println("drag " + drags++);
             if (mouseWasDragged == false) {
@@ -7531,6 +7531,8 @@ public class MapViewer extends TimedASComponent//javax.swing.JComponent
                 // do not allow following drags to do anything...
 
                 if (isSystemDragStart(e)) {
+                    mouseWasDragged = true;
+                    systemDragInitiated = true;
                     startSystemDrag(e);
                     // we'll get no more mouseDragged, and no mouseReleased
                     return;
@@ -7896,6 +7898,11 @@ public class MapViewer extends TimedASComponent//javax.swing.JComponent
             
             viewer.setAutoscrolls(true); // in case had been cleared for panning
             setLastMousePoint(e.getX(), e.getY());
+
+            if (systemDragInitiated) {
+                clearMouse();
+                return;
+            }
             
             MapMouseEvent mme = new MapMouseEvent(e, draggedSelectorBox);
             mme.setMousePress(lastMousePressX, lastMousePressY);

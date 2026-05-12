@@ -1324,47 +1324,6 @@ public class Actions implements VueConstants
         }
     };
     
-    public static final VueAction SaveCopyToZotero = new VueAction(VueResources.getString("zotero.saveCopy"))
-    {
-   	    
-      	public void act()
-      	{    	if (VUE.askSaveIfModified(VUE.getActiveMap())) {
-      	      netscape.javascript.JSObject win = (netscape.javascript.JSObject) netscape.javascript.JSObject.getWindow(VueApplet.getInstance());
-      	      String[] arguments = { VUE.getActiveMap().getFile().getAbsolutePath(),VUE.getActiveMap().getDisplayLabel() };
-      	      win.call("doImportMap", arguments);
-      	     // System.out.println("JS CALLED");
-      		}
-      	}
-    };
-    
-    public static final LWCAction AddResourceToZotero = new LWCAction(VueResources.local("zotero.addResource")) {
-    	public void act(LWComponent c)
-    	{
-    		Resource r = c.getResource();
-    		if (r !=null)
-    		{
-    			String spec = r.getSpec();
-    			
-    			
-    			if (spec.startsWith("http") || spec.startsWith("https"))
-    			{
-    				//import from url
-    				netscape.javascript.JSObject win = (netscape.javascript.JSObject) netscape.javascript.JSObject.getWindow(VueApplet.getInstance());
-  	      	      String[] arguments = { spec };
-  	      	      win.call("doImportUrl", arguments);
-
-    			}
-    			else
-    			{
-    				//import from file..
-    				netscape.javascript.JSObject win = (netscape.javascript.JSObject) netscape.javascript.JSObject.getWindow(VueApplet.getInstance());
-  	      	      String[] arguments = { spec, r.getTitle() };
-  	      	      win.call("doImportFile", arguments);
-
-    			}
-    		}
-    	}
-    };
     public static final LWCAction AddURLAction = new LWCAction(VueResources.local("mapViewer.componentMenu.addURL.label")) {
             public void act(LWComponent c) 
             {
@@ -2081,33 +2040,39 @@ public class Actions implements VueConstants
     //-------------------------------------------------------
     
     public static final LWCAction FontSmaller =
-    new LWCAction(VueResources.local("menu.format.font.fontsmaller"), keyStroke(KeyEvent.VK_MINUS, COMMAND+SHIFT)) {
+    new LWCAction(VueResources.local("menu.format.font.fontsmaller"), keyStroke(KeyEvent.VK_MINUS, CTRL)) {
         void act(LWComponent c) {
             int size = c.mFontSize.get();
-            if (size > 1) {
-                if (size >= 14 && size % 2 == 0)
-                    size -= 2;
-                else
-                    size--;
+            if (size > 7) {
+                size--;
                 c.mFontSize.set(size);
             }
         }
     };
     public static final LWCAction FontBigger =
-    new LWCAction(VueResources.local("menu.format.font.fontbig"), keyStroke(KeyEvent.VK_EQUALS, COMMAND+SHIFT)) {
+    new LWCAction(VueResources.local("menu.format.font.fontbig"), keyStroke(KeyEvent.VK_EQUALS, CTRL)) {
         void act(LWComponent c) {
             int size = c.mFontSize.get();
-            if (size >= 12 && size % 2 == 0)
-                size += 2;
-            else
-                size++;
+            size++;
             c.mFontSize.set(size);
         }
     };
+
+    private static void setFontWeight(LWComponent c, int fontWeight) {
+        c.mFontStyle.set(c.mFontStyle.get() & ~Font.BOLD);
+        c.mFontWeight.set(fontWeight);
+    }
+
     public static final LWCAction FontBold =
     new LWCAction(VueResources.local("menu.format.font.fontbold"), keyStroke(KeyEvent.VK_B, COMMAND)) {
         void act(LWComponent c) {
-            c.mFontStyle.set(c.mFontStyle.get() ^ Font.BOLD);
+            setFontWeight(c, LWComponent.nextFontWeight(c.mFontWeight.get()));
+        }
+    };
+    public static final LWCAction FontWeightSmaller =
+    new LWCAction(VueResources.local("menu.format.font.fontweightsmaller"), keyStroke(KeyEvent.VK_B, COMMAND + SHIFT)) {
+        void act(LWComponent c) {
+            setFontWeight(c, LWComponent.previousFontWeight(c.mFontWeight.get()));
         }
     };
     public static final LWCAction FontItalic =

@@ -84,6 +84,7 @@
 		<field name="XMLstrokeColor"><bind-xml name="strokeColor" node="element"/></field>
 		<field name="XMLtextColor"><bind-xml name="textColor" node="element"/></field>
 		<field name="XMLfont" type="string"><bind-xml name="font" node="element"/></field>
+		<field name="XMLfontWeight" type="string"><bind-xml name="fontWeight" node="element"/></field>
 		<field name="XMLhidden"><bind-xml name="hidden" node="attribute"/></field>
 		<field name="strokeWidth" type="float"><bind-xml name="strokeWidth" node="attribute"/></field>
 		<field name="autoSized" type="boolean"><bind-xml name="autoSized" node="attribute"/></field>

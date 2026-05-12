@@ -14,11 +14,11 @@
  */
 package tufts.vue;
 
-import java.applet.AppletContext;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Frame;
@@ -58,7 +58,6 @@ import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
-import javax.swing.JApplet;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
@@ -138,8 +137,6 @@ public class VUE
 
     private static final Logger Log = Logger.getLogger(VUE.class);
     
-    private static AppletContext sAppletContext 	= null;
-    
     /** The currently active selection.
      * elements in ModelSelection should always be from the ActiveModel */
     static final LWSelection ModelSelection = new LWSelection();
@@ -158,6 +155,7 @@ public class VUE
     
     private static boolean isStartupUnderway = false;
     private static java.util.List FilesToOpen = Collections.synchronizedList(new java.util.ArrayList());
+    private static LWMap DefaultStartupMap = null;
 
     private static InspectorPane inspectorPane = null;
     private static FormatPanel formattingPanel; 
@@ -556,8 +554,6 @@ public class VUE
         //Util.printStackTrace("ENABLED MAP ACTIONS " + enable);    	
         VueMenuBar.RootMenuBar.saveAction.setEnabled(enable);
         VueMenuBar.RootMenuBar.saveAsAction.setEnabled(enable);
-        if (VUE.isApplet() && VueApplet.isZoteroApplet())
-        	Actions.SaveCopyToZotero.setEnabled(enable);
         VueMenuBar.RootMenuBar.publishMenu.setEnabled(enable);
         Actions.CloseMap.setEnabled(enable);
         VueMenuBar.RootMenuBar.printAction.setEnabled(enable);
@@ -704,18 +700,8 @@ public class VUE
         ActiveInstance.removeListener(clazz, reflectedListener);
     }	
     
-    public static void setAppletContext(AppletContext ac) {
-        sAppletContext = ac;
-    }
-    public static AppletContext getAppletContext() {
-        return sAppletContext;
-    }
     public static boolean isApplet() {
-    	if (VueApplet.getInstance() !=null)
-    		return VueApplet.getInstance().getAppletContext() != null;
-    	else
-    		return false;
-      //  return sAppletContext != null;
+        return false;
     }
 
     public static String getSystemProperty(String name) {
@@ -1442,44 +1428,74 @@ public class VUE
         if (!VueUtil.isMacPlatform())
             throw new RuntimeException("can only install OSX event handlers on Mac OS X");
 
-        VUE.Log.debug("INSTALLING MAC OSX APPLICATION HANDLER");
+        if (!Desktop.isDesktopSupported()) {
+            Log.info("macOS application event handlers are not available: Desktop is unsupported");
+            return;
+        }
 
-        File test = new File("/System/Library/Java/com/apple/cocoa/application/NSWindow.class");
+        final Desktop desktop = Desktop.getDesktop();
+        VUE.Log.debug("INSTALLING MAC OSX APPLICATION HANDLERS");
 
-        if (test.exists()) 
-            Log.info("cocoa-java bridge appears present; found " + test);
-        else
-            Log.info("cocoa-java bridge is not present; couldn't find " + test);
-
-        tufts.macosx.MacOSX.registerApplicationListener(new tufts.macosx.MacOSX.ApplicationListener() {
-                public boolean handleOpenFile(String filename) {
-                    VUE.Log.info("OSX OPEN FILE " + filename);
+        if (desktop.isSupported(Desktop.Action.APP_OPEN_FILE)) {
+            desktop.setOpenFileHandler(event -> {
+                for (File file : event.getFiles()) {
+                    VUE.Log.info("OSX OPEN FILE " + file);
                     if (VUE.isStartupUnderway)
-                        VUE.FilesToOpen.add(filename);
+                        VUE.FilesToOpen.add(file.getAbsolutePath());
                     else
-                        VUE.displayMap(new File(filename));
-                    return true;
+                        VUE.displayMap(file);
                 }
-                public boolean handleQuit() {
-                    VUE.Log.debug("OSX QUIT");
-                    ExitAction.exitVue();
-                    // Always return false.  If we claim this is "handled",
-                    // OSX  will do the quit for us, and even if the ExitAction
-                    // was aborted, we'd exit anyway...
-                    return false;
-                }
-                public boolean handleAbout() {
-                    VUE.Log.debug("OSX ABOUT");
-                    new AboutAction().fire(tufts.macosx.MacOSX.ApplicationListener.class);
-                    return true;
-                }
-                public boolean handlePreferences() {
-                    VUE.Log.debug("OSX PREFERENCES");
-                    Actions.Preferences.fire(tufts.macosx.MacOSX.ApplicationListener.class);
-                    return true;
-                }
-                
             });
+        } else {
+            Log.info("macOS open-file handler is not supported by this Desktop");
+        }
+
+        if (desktop.isSupported(Desktop.Action.APP_QUIT_HANDLER)) {
+            desktop.setQuitHandler((event, response) -> {
+                VUE.Log.debug("OSX QUIT");
+                ExitAction.exitVue();
+                response.cancelQuit();
+            });
+        } else {
+            Log.info("macOS quit handler is not supported by this Desktop");
+        }
+
+        if (desktop.isSupported(Desktop.Action.APP_ABOUT)) {
+            desktop.setAboutHandler(event -> {
+                VUE.Log.debug("OSX ABOUT");
+                new AboutAction().fire(VUE.class);
+            });
+        } else {
+            Log.info("macOS about handler is not supported by this Desktop");
+        }
+
+        if (desktop.isSupported(Desktop.Action.APP_PREFERENCES)) {
+            desktop.setPreferencesHandler(event -> {
+                VUE.Log.debug("OSX PREFERENCES");
+                Actions.Preferences.fire(VUE.class);
+            });
+        } else {
+            Log.info("macOS preferences handler is not supported by this Desktop");
+        }
+    }
+
+    private static void displayStartupMap()
+    {
+        try {
+            final URL startupURL = VueResources.getURL("resource.startmap");
+            if (startupURL == null)
+                throw new IllegalStateException("resource.startmap was not found");
+            LWMap startupMap = OpenAction.loadMap(startupURL);
+            if (startupMap == null)
+                throw new IllegalStateException("resource.startmap did not produce a map");
+            startupMap.setFile(null);
+            startupMap.markAsSaved();
+            displayMap(startupMap);
+            DefaultStartupMap = startupMap;
+        } catch (Throwable t) {
+            Log.warn("failed to load startup map; creating a new blank map", t);
+            VUE.displayMap(new LWMap(VueResources.getString("vue.main.newmap")));
+        }
     }
 
     private static final boolean ToolbarAtTopScreen = false && VueUtil.isMacPlatform();
@@ -1489,19 +1505,19 @@ public class VUE
         //-------------------------------------------------------
         // Create the tabbed panes for the viewers
         //-------------------------------------------------------
-    	if (!VUE.isApplet())
-    	{
-    		mMapTabsLeft = new MapTabbedPane("*left", true);
-    		mMapTabsRight = new MapTabbedPane("right", false);
-    	}
-    	else
-    		mMapTabsLeft = new MapTabbedPane("*left",true);//VueApplet.getMapTabbedPane();
+        if (!VUE.isApplet())
+        {
+            mMapTabsLeft = new MapTabbedPane("*left", true);
+            mMapTabsRight = new MapTabbedPane("right", false);
+        }
+        else
+            mMapTabsLeft = new MapTabbedPane("*left", true);
         
         
         //-------------------------------------------------------
         // Create the split pane
         //-------------------------------------------------------
-    	mViewerSplit = buildSplitPane(mMapTabsLeft, mMapTabsRight);
+        mViewerSplit = buildSplitPane(mMapTabsLeft, mMapTabsRight);
     	if (VUE.isApplet())
     	{
     		mViewerSplit.setBackground(new Color(244,244,244));
@@ -1750,7 +1766,7 @@ public class VUE
         	 */
 
         	if (FilesToOpen.size() == 0)
-        		VUE.displayMap(new LWMap(VueResources.getString("vue.main.newmap")));
+                displayStartupMap();
 
         	// Generally, we need to wait until java 1.5 JSplitPane's have been validated to
         	// use the % set divider location.  Unfortunately there's a bug in at MacOS java
@@ -3342,6 +3358,11 @@ public class VUE
         if (file == null)
             return;
 
+        if (DefaultStartupMap != null && !DefaultStartupMap.isModified() && DefaultStartupMap.getFile() == null) {
+            closeMap(DefaultStartupMap);
+            DefaultStartupMap = null;
+        }
+
         if (VUE.isApplet())
         {
         	if (	(getActiveMap() != null) && 
@@ -3742,20 +3763,7 @@ public class VUE
     
     /** return the root VUE window, mainly for those who'd like it to be their parent */
     public static Window getRootWindow() {
-    	if (!VUE.isApplet())
-    		return VUE.ApplicationFrame;
-    	else
-    	{
-    		Frame[] frames = JFrame.getFrames();
-    		//System.out.println("FRAME LENGTH " + frames.length);
-    		JApplet app =  VueApplet.getInstance();
-    		Container c = app.getParent();
-    		while (!(c instanceof Window))
-    		{
-    			c = c.getParent();
-    		}
-    		return (Window)c;
-    	}
+        return VUE.ApplicationFrame;
     	/*
         if (true) {
             return VUE.frame;

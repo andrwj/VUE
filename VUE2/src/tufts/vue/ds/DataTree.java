@@ -1949,8 +1949,9 @@ public class DataTree extends javax.swing.JTree
 
         protected DataNode() {}
 
+        @SuppressWarnings("unchecked")
         Vector<DataNode> getChildren() {
-            return super.children;
+            return (Vector<DataNode>)(Vector<?>) super.children;
         }
 
         Schema getSchema() {
@@ -2575,4 +2576,3 @@ public class DataTree extends javax.swing.JTree
 //         Log.debug("PRODUCED META-DATA IN " + field);
 
 //     }
-

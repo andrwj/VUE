@@ -346,11 +346,11 @@ public class GUI
         int fontSize;
         int fontSize2;
         if (isMacAqua) {
-            fontName = "Lucida Grande";
+            fontName = "Pretendard Variable";
             fontSize = 11;
             fontSize2 = fontSize + 2;
         } else {
-            fontName = "SansSerif";
+            fontName = "Pretendard Variable";
             fontSize = 11;
             fontSize2 = 11;
         }
@@ -2582,21 +2582,19 @@ public class GUI
         if (AquaTextBorder != null)
             return AquaTextBorder;
         
-        try {
-            Class abc = null;
+        AquaTextBorder = UIManager.getBorder("TextField.border");
 
-            try {
-                abc = Class.forName("apple.laf.AquaTextFieldBorder");
-            } catch (ClassNotFoundException e) {
-                // java 6 update as of June 2009 (1.6.0_13) will fail on above, but should find this:
-                abc = Class.forName("com.apple.laf.AquaTextFieldBorder");
-            }
-            AquaTextBorder = (javax.swing.border.Border) abc.newInstance();
-            if (DEBUG.Enabled) Log.debug("found Mac Aqua text border: " + abc);
-        } catch (Throwable t) {
-            Log.error("Mac Aqua GUI init problem:", t);
-            AquaTextBorder = new LineBorder(Color.blue); // backup debug
-            
+        if (AquaTextBorder == null)
+            AquaTextBorder = UIManager.getBorder("TextPane.border");
+
+        if (AquaTextBorder == null)
+            AquaTextBorder = UIManager.getBorder("EditorPane.border");
+
+        if (AquaTextBorder == null) {
+            Log.info("Mac Aqua text border unavailable; using VUE fallback border");
+            AquaTextBorder = new LineBorder(AquaFocusBorderDark);
+        } else if (DEBUG.Enabled) {
+            Log.debug("found Mac Aqua text border: " + AquaTextBorder);
         }
 
         return AquaTextBorder;
@@ -2665,7 +2663,7 @@ public class GUI
 
     private static void setFontAttributes(javax.swing.text.MutableAttributeSet a, Font f)
     {
-        StyleConstants.setFontFamily(a, f.getFamily());
+        StyleConstants.setFontFamily(a, f.getFontName());
         StyleConstants.setFontSize(a, f.getSize());
         StyleConstants.setItalic(a, f.isItalic());
         StyleConstants.setBold(a, f.isBold());
@@ -2934,16 +2932,20 @@ public class GUI
                                                         DnDConstants.ACTION_COPY, // preferred action (1 only)
                                                         dragStart, // start point
                                                         Collections.singletonList(mouseEvent));
-        trigger
-            .startDrag(DragSource.DefaultCopyDrop, // cursor
-                       rawImage,
-                       dragOffset,
-                       transfer,
-                       //null,  // drag source listener
-                       //MapViewer.this  // drag source listener
-                       new GUI.DragSourceAdapter()
-                       // is optional when startDrag from DragGestureEvent, but not dragSource.startDrag
-                       );        
+        try {
+            trigger
+                .startDrag(DragSource.DefaultCopyDrop, // cursor
+                           rawImage,
+                           dragOffset,
+                           transfer,
+                           //null,  // drag source listener
+                           //MapViewer.this  // drag source listener
+                           new GUI.DragSourceAdapter()
+                           // is optional when startDrag from DragGestureEvent, but not dragSource.startDrag
+                           );
+        } catch (InvalidDnDOperationException e) {
+            Log.debug("Ignoring duplicate drag start while AWT drag and drop is already in progress: " + e);
+        }
     }
     
     

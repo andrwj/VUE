@@ -92,6 +92,9 @@
 		<field name="XMLfont" type="string">
 			<bind-xml name="font" node="element"/>
 		</field>
+		<field name="XMLfontWeight" type="string">
+			<bind-xml name="fontWeight" node="element"/>
+		</field>
 		<field name="XMLhidden">
 			<bind-xml name="hidden" node="attribute"/>
 		</field>

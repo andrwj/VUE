@@ -25,15 +25,18 @@ import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
-
-import com.sun.org.apache.xml.internal.serialize.OutputFormat;
-import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 
 public class WriteSearchXMLData {
 	private static final org.apache.log4j.Logger Log = org.apache.log4j.Logger.getLogger(WriteSearchXMLData.class);
@@ -155,20 +158,19 @@ public class WriteSearchXMLData {
 
 		{
 
-			OutputFormat format = new OutputFormat(dom);
-			format.setIndenting(true);
-			
+				Transformer transformer = TransformerFactory.newInstance().newTransformer();
+				transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+				transformer.transform(new DOMSource(dom), new StreamResult(new FileOutputStream(new File("Search.xml"))));
 
-			XMLSerializer serializer = new XMLSerializer(new FileOutputStream(
-					new File("Search.xml")), format);
+			} catch (IOException ie) {
 
-			serializer.serialize(dom);
+				ie.printStackTrace();
 
-		} catch (IOException ie) {
+			} catch (TransformerException te) {
 
-			ie.printStackTrace();
+				te.printStackTrace();
 
-		}
+			}
 
 	}
 	

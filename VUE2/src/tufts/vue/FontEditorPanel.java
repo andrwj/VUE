@@ -592,20 +592,24 @@ public class FontEditorPanel extends JPanel
             new LWPropertyHandler<Integer>(LWKey.FontStyle) {
                 public Integer produceValue() {
                     int style = Font.PLAIN;
-                    if (mItalicButton.isSelected())
+                    if (mItalicButton != null && mItalicButton.isSelected())
                         style |= Font.ITALIC;
-                    if (mBoldButton.isSelected())
+                    if (mBoldButton != null && mBoldButton.isSelected())
                         style |= Font.BOLD;
                     
                     return style;
                 }
                 public void displayValue(Integer value) {
+                    if (mBoldButton == null || mItalicButton == null)
+                        return;
                     final int style = value;
                     mBoldButton.setSelected((style & Font.BOLD) != 0);
                     mItalicButton.setSelected((style & Font.ITALIC) != 0);
                 }
 
                 public void setEnabled(boolean enabled) {
+                    if (mBoldButton == null || mItalicButton == null)
+                        return;
                     mBoldButton.setEnabled(enabled);
                     mItalicButton.setEnabled(enabled);
                    
@@ -616,7 +620,7 @@ public class FontEditorPanel extends JPanel
             new LWPropertyHandler<String>(LWKey.FontUnderline) {
                 public String produceValue() {                
                 	String style="";
-                    if (mUnderlineButton.isSelected())
+                    if (mUnderlineButton != null && mUnderlineButton.isSelected())
                     	style="underline";
                     else
                     	style="normal";
@@ -625,10 +629,14 @@ public class FontEditorPanel extends JPanel
                 
 
                 public void setEnabled(boolean enabled) {
+                    if (mUnderlineButton == null)
+                        return;
               
                     mUnderlineButton.setEnabled(enabled);
                 }
 				public void displayValue(String propertyValue) {
+                    if (mUnderlineButton == null)
+                        return;
 					 final String style = propertyValue;
 					 if (style.equals("underline"))
 	                    mUnderlineButton.setSelected(true);
