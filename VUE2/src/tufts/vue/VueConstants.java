@@ -38,9 +38,9 @@ public interface VueConstants
     //static Font DefaultFont = new Font("SansSerif", Font.PLAIN, 18);
     static Font FixedFont = new Font("Courier", Font.BOLD, 12);
     static Font FixedSmallFont = new Font("Courier", Font.BOLD, 10);
-    static Font MediumFont = new Font("Pretendard Variable", Font.PLAIN, 12);
-    static Font SmallFont = new Font("Pretendard Variable", Font.PLAIN, 10);
-    static Font LargeFont = new Font("Pretendard Variable", Font.PLAIN, 14);
+    static Font MediumFont = new Font("Pretendard", Font.PLAIN, 12);
+    static Font SmallFont = new Font("Pretendard", Font.PLAIN, 10);
+    static Font LargeFont = new Font("Pretendard", Font.PLAIN, 14);
     //static Font LinkLabelFont = new Font("SansSerif", Font.PLAIN, 10);
 
     //static Font SmallFixedFont = new Font("Lucida Sans Typewriter", Font.PLAIN, 10); // will not show special character glyphs
@@ -72,9 +72,9 @@ public interface VueConstants
     
     // static Font LargeFixedFont = new Font("Lucida Sans Typewriter", Font.PLAIN, 12);
 
-    static Font FONT_DEFAULT = new Font("Pretendard Variable", Font.PLAIN, 14);
-    static Font FONT_MEDIUM = new Font("Pretendard Variable", Font.PLAIN, 12);
-    static Font FONT_MEDIUM_UNICODE = new Font("Arial Unicode MS", Font.PLAIN, 12);
+    static Font FONT_DEFAULT = new Font("Pretendard", Font.PLAIN, 16);
+    static Font FONT_MEDIUM = new Font("Pretendard", Font.PLAIN, 14);
+    static Font FONT_MEDIUM_UNICODE = new Font("Arial Unicode MS", Font.PLAIN, 14);
     // TODO: above font only avail on Win2K/WinXP if Office installed (I think),
     // if this is NOT available, "Lucida Sans Unicode" is a better bet.
     // Wait: actually, this font works just as well as Lucida Sans Unicode,
@@ -82,12 +82,12 @@ public interface VueConstants
     // does NOT appear in the font list on default WinXP systems, it
     // appears to get mapped to something with decent unicode support,
     // except for asian fonts (chinese/japanese/korean).
-    static Font FONT_MEDIUM_BOLD = new Font("Pretendard Variable", Font.BOLD,11);
-    static Font FONT_SMALL = new Font("Pretendard Variable", Font.PLAIN, 10);
-    static Font FONT_SMALL_BOLD = new Font("Pretendard Variable", Font.BOLD, 10);
-    static Font FONT_TINY = new Font("Pretendard Variable", Font.PLAIN, 8);
+    static Font FONT_MEDIUM_BOLD = new Font("Pretendard", Font.BOLD,13);
+    static Font FONT_SMALL = new Font("Pretendard", Font.PLAIN, 12);
+    static Font FONT_SMALL_BOLD = new Font("Pretendard", Font.BOLD, 12);
+    static Font FONT_TINY = new Font("Pretendard", Font.PLAIN, 10);
     static Font FONT_ICONIC = new Font("Arial Black", Font.PLAIN, 8);
-    static Font FONT_NARROW = new Font("Arial Narrow", Font.PLAIN, 11);
+    static Font FONT_NARROW = new Font("Arial Narrow", Font.PLAIN, 13);
 
     //static Font FONT_LINKLABEL = new Font("Verdana", Font.PLAIN, 11);
     //static Font FONT_LINKLABEL = new Font("SansSerif", Font.PLAIN, 10);

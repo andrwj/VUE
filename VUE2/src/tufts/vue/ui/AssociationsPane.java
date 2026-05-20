@@ -129,12 +129,6 @@ public class AssociationsPane extends Widget
 		}
 	}
 
-	public void finalize() {
-//		addAssociationAction = null;
-		deleteAssociationAction = null;
-		associationsTable = null;
-	}
-
 	public void setActions() {
 //		setMiscAction(this, new AddAssociationListener(), "dockWindow.addButton");
 		setHelpAction(this, VueResources.getString("dockWindow.Datasources.associationsPane.helpText"));;

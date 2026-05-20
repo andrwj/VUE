@@ -181,25 +181,6 @@ public class JavaAnalysisPanel extends JPanel implements ActionListener {
 			analyzeButton.setOpaque(true);
 		}
 	}
-
-
-	public void finalize() {
-		contentPanel = null;
-		classesCheckBox = null;
-		innerClassesCheckBox = null;
-		interfacesCheckBox = null;
-		innerInterfacesCheckBox = null;
-		messageTextArea = null;
-		analyzeButton = null;
-		lastDirectory = null;
-		allNodes = null;
-		newComps = null;
-		classHash = null;
-		analysisThread = null;
-		currentFileFilter = null;
-	}
-
-
 	public static DockWindow getJavaAnalysisDock() {
 		if (dock == null) {
 			JavaAnalysisPanel	analysisPanel = new JavaAnalysisPanel();

@@ -67,13 +67,6 @@ public class DataSetViewer extends ContentViewer {
 	}
 
 
-	public void finalize() {
-		DSB = null;
-		browserDS = null;
-		dataSourceList = null;
-	}
-
-
 	protected void loadDataSets() {
 		File file = new File(VueUtil.getDefaultUserFolder().getAbsolutePath()+File.separatorChar+VueResources.getString("save.datasources"));
 

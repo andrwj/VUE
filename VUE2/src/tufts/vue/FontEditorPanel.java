@@ -175,7 +175,7 @@ public class FontEditorPanel extends JPanel
         mFontCombo.setOpaque(false);
         // Set selected items BEFORE adding action listeners, or during startup
         // we think a user has actually selected this item!
-        mFontCombo.setSelectedItem("Arial");
+        mFontCombo.setSelectedItem(LWNode.DEFAULT_TEXT_FONT.getFontName());
         mFontCombo.addActionListener(fontPropertyHandler);
 //         We don't appear to get any events here!
 //         mFontCombo.addItemListener(new ItemListener() {

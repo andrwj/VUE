@@ -1901,7 +1901,7 @@ public class Images
             thread.start();
         }        
         public void stop() {
-            thread.stop();
+            thread.interrupt();
         }        
     }
     
@@ -2492,9 +2492,6 @@ public class Images
                 }
                 else if (t instanceof ImageException) {
                     msg = (t.getMessage() == NO_READABLE_FOUND ? null : t.getMessage());
-                }
-                else if (t instanceof ThreadDeath) {
-                    msg = "interrupted";
                 }
                 else if (t.getMessage() != null && t.getMessage().length() > 0) {
                     msg = t.getMessage();
@@ -3210,12 +3207,8 @@ public class Images
             // Amazing.
             iconSource = source.getScaledInstance(size.width, size.height, Image.SCALE_SMOOTH);
 
-            if (iconSource instanceof sun.awt.image.ToolkitImage) { // will probably always be a ToolkitImage
-                // generally neeeded in case the the image has alpha, so transparency will be Transparency.TRANSLUCENT
-                // This will normally have already been pulled from the BufferedImage source, but just in
-                // case the source wasn't a BufferedImage:
-                transparency = ((sun.awt.image.ToolkitImage)iconSource).getColorModel().getTransparency();
-            }
+            if (!(source instanceof BufferedImage))
+                transparency = Transparency.TRANSLUCENT;
                 
             // note: there are supposed to be faster methods available for generating
             // similar quality that involve multi-pass down-scaling that have been
@@ -3796,5 +3789,4 @@ class FileBackedImageInputStream extends ImageInputStreamImpl
     }
 
 }
-
 

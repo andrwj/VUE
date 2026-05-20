@@ -129,15 +129,16 @@ public class IMSCP {
     }
      
     public void close() throws IOException{
-        zipFile.close();
+        if (zipFile != null) {
+            zipFile.close();
+            zipFile = null;
+        }
     }
     
     public void closeZOS() throws IOException {
-        zos.close();
-    }
-    
-    protected void finalize() throws Throwable{
-        super.finalize();
-        close();
+        if (zos != null) {
+            zos.close();
+            zos = null;
+        }
     }
 }

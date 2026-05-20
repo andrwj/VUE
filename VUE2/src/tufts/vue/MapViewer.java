@@ -173,6 +173,10 @@ public class MapViewer extends TimedASComponent//javax.swing.JComponent
     protected TextBox activeTextEdit;
     /** Current on-map text edit, null if no edit active */
     protected RichTextBox activeRichTextEdit;
+    /** Newly created component whose edit completion should return to the selection tool. */
+    private LWComponent selectToolAfterEditTarget;
+    /** Text Tool-created rich text waiting for its automatic post-create edit. */
+    private LWComponent pendingTextToolCreatedEditTarget;
     
     private final ResizeControl resizeControl = new ResizeControl();
     
@@ -503,6 +507,9 @@ public class MapViewer extends TimedASComponent//javax.swing.JComponent
             activeTool = subTool;
         else
             activeTool = tool;
+
+        if (pendingTextToolCreatedEditTarget != null && !(activeTool instanceof RichTextTool))
+            pendingTextToolCreatedEditTarget = null;
         
         activeTool.setTemporary(temporary);
         setMapCursor(activeTool.getCursor());
@@ -4308,10 +4315,13 @@ public class MapViewer extends TimedASComponent//javax.swing.JComponent
             super.remove(c);
         } finally {
             boolean removedEdit = false;
+            LWComponent editedComponent = null;
             if (c == activeTextEdit) {
+                editedComponent = activeTextEdit.getLWC();
                 activeTextEdit = null;
                 removedEdit = true;
             } else if (c == activeRichTextEdit) {
+                editedComponent = activeRichTextEdit.getLWC();
                 activeRichTextEdit = null;
                 removedEdit = true;
                 VUE.setActive(RichTextBox.class, this, null);
@@ -4328,8 +4338,36 @@ public class MapViewer extends TimedASComponent//javax.swing.JComponent
                     // that we re-enable actions.
                     VueAction.setAllActionsIgnored(false);
                 }
+                selectToolAfterCreatedEdit(editedComponent);
             }
         }
+    }
+
+    void markTextToolCreatedForSelectionAfterEdit(LWComponent lwc) {
+        pendingTextToolCreatedEditTarget = lwc;
+    }
+
+    void activateLabelEditAndSelectToolAfterEdit(LWComponent lwc) {
+        selectToolAfterEditTarget = null;
+        activateLabelEdit(lwc);
+        if (isEditingLabel(lwc))
+            selectToolAfterEditTarget = lwc;
+    }
+
+    private boolean isEditingLabel(LWComponent lwc) {
+        return (activeTextEdit != null && activeTextEdit.getLWC() == lwc)
+            || (activeRichTextEdit != null && activeRichTextEdit.getLWC() == lwc);
+    }
+
+    private void selectToolAfterCreatedEdit(final LWComponent editedComponent) {
+        if (editedComponent == null || editedComponent != selectToolAfterEditTarget)
+            return;
+
+        selectToolAfterEditTarget = null;
+        pendingTextToolCreatedEditTarget = null;
+        GUI.invokeAfterAWT(new Runnable() { public void run() {
+            VueToolbarController.getController().setSelectedTool(VueTool.getInstance(SelectionTool.class));
+        }});
     }
     
     boolean hasActiveTextEdit() {
@@ -4371,6 +4409,9 @@ public class MapViewer extends TimedASComponent//javax.swing.JComponent
      */
     
     void activateLabelEdit(LWComponent lwc) {
+
+        if (pendingTextToolCreatedEditTarget != null && pendingTextToolCreatedEditTarget != lwc)
+            pendingTextToolCreatedEditTarget = null;
 
         if (activeTextEdit != null && activeTextEdit.getLWC() == lwc)
             return;
@@ -4475,6 +4516,10 @@ public class MapViewer extends TimedASComponent//javax.swing.JComponent
         }
         
         if (DEBUG.LAYOUT) System.out.println(activeTextEdit + " back from requestFocus");
+        if (pendingTextToolCreatedEditTarget == lwc && isEditingLabel(lwc)) {
+            selectToolAfterEditTarget = lwc;
+            pendingTextToolCreatedEditTarget = null;
+        }
     }
     
     private void drawSelectorBox(DrawContext dc, Rectangle r) {
@@ -6174,8 +6219,30 @@ public class MapViewer extends TimedASComponent//javax.swing.JComponent
                 handled = e.isConsumed();
 
             } else {
+
+                if (keyChar == 'c' && GUI.noModifierKeysDown(e)) {
+                    if (getSelection().size() == 1) {
+                        Actions.captureUsedStyle(getSelection().first());
+                        e.consume();
+                        return;
+                    }
+                }
+
+                if (keyChar == '!' && !e.isControlDown() && !e.isMetaDown() && !e.isAltDown()) {
+                    Actions.PasteStyle.fire(e);
+                    e.consume();
+                    return;
+                }
                 
                 switch (keyCode) {
+
+                case KeyEvent.VK_OPEN_BRACKET:
+                    handled = GUI.noModifierKeysDown(e) && Actions.applyPreviousUsedStyleToPalette();
+                    break;
+
+                case KeyEvent.VK_CLOSE_BRACKET:
+                    handled = GUI.noModifierKeysDown(e) && Actions.applyNextUsedStyleToPalette();
+                    break;
                 
                 case KeyEvent.VK_UP:
                 case KeyEvent.VK_DOWN:

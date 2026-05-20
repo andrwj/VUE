@@ -346,13 +346,13 @@ public class GUI
         int fontSize;
         int fontSize2;
         if (isMacAqua) {
-            fontName = "Pretendard Variable";
-            fontSize = 11;
+            fontName = "Pretendard";
+            fontSize = 13;
             fontSize2 = fontSize + 2;
         } else {
-            fontName = "Pretendard Variable";
-            fontSize = 11;
-            fontSize2 = 11;
+            fontName = "Pretendard";
+            fontSize = 13;
+            fontSize2 = 13;
         }
 
         final String fixedFont = "Lucida Sans Typewriter";
@@ -985,7 +985,7 @@ public class GUI
                 // debug: does this return us anything interesting?  java 1.5 default impl delegates to ShellFolder,
                 // so result should presumably be the same
                 fsIcon = javax.swing.filechooser.FileSystemView.getFileSystemView().getSystemIcon(file);
-            } catch (Throwable _) {}
+            } catch (Throwable ignored) {}
             
             Log.warn("could not get Icon for filetype: " + ext + "." + sizeRequest + "; " + t + "; fsIcon=" + fsIcon);
             

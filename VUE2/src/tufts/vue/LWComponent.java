@@ -1048,6 +1048,8 @@ public class LWComponent
         final void setBy(String s) {
         	//check for underline
 
+            s = normalizeLegacyPretendardFontSpec(s);
+
         	String p = s.substring(s.indexOf("-")+1,s.length());
         	p = p.substring(0,p.indexOf("-"));
 
@@ -1119,6 +1121,7 @@ public class LWComponent
 
     public class CSSFontFamilyProperty extends StringProperty {
         CSSFontFamilyProperty(Key key) { super(key); }
+        void setBy(String s) { set(normalizeLegacyPretendardFontSpec(normalizeLegacyPretendardFontName(s))); }
         void setFromCSS(String cssKey, String value) {
             // no translation needed for now: just use the raw name -- if it's a preference list tho, we'll need to handle it
             setBy(value);
@@ -1305,7 +1308,7 @@ public class LWComponent
         2.75f   // 900
     };
 
-    private static final String[] PretendardVariableFontNames = {
+    private static final String[] LegacyPretendardVariableFontNames = {
         "PretendardVariable-Thin",
         "PretendardVariable-ExtraLight",
         "PretendardVariable-Light",
@@ -1356,15 +1359,64 @@ public class LWComponent
         if (fontName == null)
             return fontName;
 
+        fontName = normalizeLegacyPretendardFontName(fontName);
         final String lower = fontName.toLowerCase(Locale.US);
         final int weightIndex = (normalizeFontWeight(weight) - FONT_WEIGHT_MIN) / FONT_WEIGHT_STEP;
 
-        if (lower.equals("pretendard variable") || lower.startsWith("pretendardvariable"))
-            return PretendardVariableFontNames[weightIndex];
         if (lower.equals("pretendard") || lower.startsWith("pretendard-"))
             return PretendardFontNames[weightIndex];
 
         return fontName;
+    }
+
+    private static int fontWeightFromName(String fontName) {
+        if (fontName == null)
+            return FONT_WEIGHT_DEFAULT;
+
+        fontName = normalizeLegacyPretendardFontName(fontName);
+        for (int i = 0; i < PretendardFontNames.length; i++) {
+            if (PretendardFontNames[i].equals(fontName))
+                return FONT_WEIGHT_MIN + (i * FONT_WEIGHT_STEP);
+        }
+
+        return FONT_WEIGHT_DEFAULT;
+    }
+
+    // T19 temporary migration shim. Remove after existing VUE documents no longer
+    // contain Pretendard Variable / PretendardVariable-* font names.
+    private static String normalizeLegacyPretendardFontName(String fontName) {
+        if (fontName == null)
+            return null;
+
+        String name = fontName.trim();
+        if (name.length() >= 2
+            && ((name.charAt(0) == '"' && name.charAt(name.length() - 1) == '"')
+                || (name.charAt(0) == '\'' && name.charAt(name.length() - 1) == '\'')))
+            name = name.substring(1, name.length() - 1).trim();
+
+        if ("Pretendard Variable".equals(name))
+            return "Pretendard";
+
+        for (int i = 0; i < LegacyPretendardVariableFontNames.length; i++) {
+            if (LegacyPretendardVariableFontNames[i].equals(name))
+                return PretendardFontNames[i];
+        }
+
+        if (name.startsWith("PretendardVariable-"))
+            return "Pretendard-" + name.substring("PretendardVariable-".length());
+
+        return fontName;
+    }
+
+    private static String normalizeLegacyPretendardFontSpec(String spec) {
+        if (spec == null)
+            return null;
+
+        String normalized = spec.replace("Pretendard Variable", "Pretendard");
+        for (int i = 0; i < LegacyPretendardVariableFontNames.length; i++)
+            normalized = normalized.replace(LegacyPretendardVariableFontNames[i], PretendardFontNames[i]);
+        normalized = normalized.replace("PretendardVariable-", "Pretendard-");
+        return normalized;
     }
 
     private static int fontWeightFromTextAttribute(float weight) {
@@ -1381,6 +1433,10 @@ public class LWComponent
     }
 
     private static int fontWeightFromFont(Font font) {
+        int namedWeight = fontWeightFromName(font.getFontName());
+        if (namedWeight != FONT_WEIGHT_DEFAULT)
+            return namedWeight;
+
         final Object weight = font.getAttributes().get(TextAttribute.WEIGHT);
         if (weight instanceof Number)
             return fontWeightFromTextAttribute(((Number) weight).floatValue());
@@ -1561,7 +1617,7 @@ public class LWComponent
                     mFontStyle.take(f.getStyle());
                     mFontWeight.take(fontWeightFromFont(f));
                     mFontSize.take(f.getSize());
-                    mFontName.take(f.getName());
+                    mFontName.take(normalizeLegacyPretendardFontName(f.getName()));
                 }
 
                 if (labelBox != null) {

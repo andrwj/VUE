@@ -773,6 +773,7 @@ public class Actions implements VueConstants
     
     private static final List<LWComponent> ScratchBuffer = new ArrayList();
     private static LWComponent StyleBuffer; // this holds the style copied by "Copy Style"
+    private static final UsedStyleQueue UsedStyles = new UsedStyleQueue();
     
     private static final LWComponent.CopyContext CopyContext = new LWComponent.CopyContext(new LWComponent.LinkPatcher(), true);
     private static final List<LWComponent> DupeList = new ArrayList(); // cache for dupe'd items
@@ -1151,26 +1152,44 @@ public class Actions implements VueConstants
     
 
     public static final LWCAction CopyStyle =
-        new LWCAction(VueResources.local("menu.format.copystyle"), keyStroke(KeyEvent.VK_C, COMMAND+SHIFT)) {
+        new LWCAction(VueResources.local("menu.format.copystyle"), keyStroke(KeyEvent.VK_C, VueUtil.isMacPlatform() ? COMMAND+ALT : COMMAND+SHIFT)) {
         boolean enabledFor(LWSelection s) { return s.size() == 1; }
         void act(LWComponent c) {
-            try {
-                StyleBuffer = c.getClass().newInstance();
-            } catch (Throwable t) {
-                tufts.Util.printStackTrace(t);
-            }
-            StyleBuffer.setLabel("styleHolder");
-            StyleBuffer.copyStyle(c);
+            captureUsedStyle(c);
         }
     };
     
     public static final LWCAction PasteStyle =
-    new LWCAction(VueResources.local("menu.format.applystyle"), keyStroke(KeyEvent.VK_V, COMMAND+SHIFT)) {
+    new LWCAction(VueResources.local("menu.format.applystyle"), keyStroke(KeyEvent.VK_V, VueUtil.isMacPlatform() ? COMMAND+ALT : COMMAND+SHIFT)) {
         boolean enabledFor(LWSelection s) { return s.size() > 0 && StyleBuffer != null; }
         void act(LWComponent c) {
             c.copyStyle(StyleBuffer);
         }
     };
+
+    public static void captureUsedStyle(LWComponent c) {
+        StyleBuffer = UsedStyles.add(c);
+        if (StyleBuffer != null)
+            EditorManager.applyStyleToFormattingPalette(StyleBuffer);
+    }
+
+    public static boolean applyPreviousUsedStyleToPalette() {
+        return applyUsedStyleToPalette(UsedStyles.previous());
+    }
+
+    public static boolean applyNextUsedStyleToPalette() {
+        return applyUsedStyleToPalette(UsedStyles.next());
+    }
+
+    private static boolean applyUsedStyleToPalette(LWComponent style) {
+        StyleBuffer = style;
+        if (StyleBuffer == null) {
+            java.awt.Toolkit.getDefaultToolkit().beep();
+            return false;
+        }
+        EditorManager.applyStyleToFormattingPalette(StyleBuffer);
+        return true;
+    }
     
     //-----------------------
     // Context Menu Actions
@@ -2061,6 +2080,8 @@ public class Actions implements VueConstants
     private static void setFontWeight(LWComponent c, int fontWeight) {
         c.mFontStyle.set(c.mFontStyle.get() & ~Font.BOLD);
         c.mFontWeight.set(fontWeight);
+        if (c instanceof LWText)
+            ((LWText)c).getRichLabelBox().applyOwnerFontToAllText();
     }
 
     public static final LWCAction FontBold =
@@ -4268,7 +4289,7 @@ public class Actions implements VueConstants
             if (newItem.supportsUserLabel()) {
                 // Just in case, do this later:
                 GUI.invokeAfterAWT(new Runnable() { public void run() {
-                    viewer.activateLabelEdit(newItem);
+                    viewer.activateLabelEditAndSelectToolAfterEdit(newItem);
                 }});
             }
 

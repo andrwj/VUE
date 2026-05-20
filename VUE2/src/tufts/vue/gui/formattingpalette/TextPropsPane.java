@@ -57,6 +57,7 @@ import javax.swing.text.html.HTML;
 
 import tufts.Util;
 import tufts.vue.DEBUG;
+import tufts.vue.LWNode;
 import tufts.vue.PaletteButton;
 import tufts.vue.PaletteButtonItem;
 import tufts.vue.TextBox;
@@ -290,7 +291,7 @@ public class TextPropsPane extends JPanel implements CaretListener// ,
 		JLabel fontColorLabel = new JLabel(VueResources
 				.getString("formatting.text.color.label"));		
 
-		field.setSelectedItem(new String("Arial"));
+		field.setSelectedItem(LWNode.DEFAULT_TEXT_FONT.getFontName());
 		sizeField.setSelectedItem(new String("14"));
 		GridBagConstraints c = new GridBagConstraints();
 		colorButton.setColor(Color.black);

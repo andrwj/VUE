@@ -49,6 +49,11 @@ import java.util.regex.Pattern;
 import javax.swing.JComboBox;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.Action;
+import javax.swing.AbstractAction;
+import javax.swing.KeyStroke;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.*;
@@ -136,6 +141,8 @@ public class RichTextBox extends com.lightdev.app.shtm.SHTMLEditorPane
     private boolean wasOpaque; /** were we opaque before we started an edit? */
     private float mMaxCharWidth;
     private float mMaxWordWidth;
+    private static final String FontWeightUpAction = "vue-font-weight-up";
+    private static final String FontWeightDownAction = "vue-font-weight-down";
  //   private RichTextHighlighter vueHighlighter = null;
     RichTextBox(LWComponent lwc)
     {
@@ -167,7 +174,14 @@ public class RichTextBox extends com.lightdev.app.shtm.SHTMLEditorPane
         addKeyListener(this);
         addFocusListener(this);
         getDocument().addDocumentListener(this);
-      
+        installFontWeightKeyBindings();
+
+        addCaretListener(new CaretListener() {
+            public void caretUpdate(CaretEvent e) {
+                forceInputAttributes();
+            }
+        });
+
         if (VueUtil.isWindowsPlatform() && SelectionColor != null)
             setSelectionColor(SelectionColor);
         if (VueUtil.isWindowsPlatform() && SelectionColor != null)
@@ -176,6 +190,66 @@ public class RichTextBox extends com.lightdev.app.shtm.SHTMLEditorPane
         mBounds.y = Float.NaN; // mark as uninitialized
         
         if (TestDebug||DEBUG.TEXT) out("constructed " + getSize());
+    }
+
+    private void forceInputAttributes() {
+        if (!(getEditorKit() instanceof StyledEditorKit)) return;
+        Font f = (lwc != null) ? lwc.getFont() : getFont();
+        if (f == null) return;
+        final MutableAttributeSet attrs = ((StyledEditorKit) getEditorKit()).getInputAttributes();
+        final String fontName = f.getFontName();
+        final String fontSize = String.valueOf(f.getSize());
+        StyleConstants.setFontFamily(attrs, fontName);
+        StyleConstants.setFontSize(attrs, f.getSize());
+        StyleConstants.setItalic(attrs, f.isItalic());
+        StyleConstants.setBold(attrs, f.isBold());
+        Util.styleSheet().addCSSAttribute(attrs, CSS.Attribute.FONT_FAMILY, fontName);
+        attrs.addAttribute(HTML.Attribute.FACE, fontName);
+        Util.styleSheet().addCSSAttribute(attrs, CSS.Attribute.FONT_SIZE, fontSize);
+        attrs.addAttribute(HTML.Attribute.SIZE, fontSize);
+    }
+
+    @Override
+    public void replaceSelection(String content) {
+        super.replaceSelection(content);
+        forceInputAttributes();
+    }
+
+    @Override
+    public void setDocument(Document doc) {
+        super.setDocument(doc);
+        if (doc instanceof AbstractDocument) {
+            ((AbstractDocument) doc).setDocumentFilter(new DocumentFilter() {
+                @Override
+                public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr)
+                        throws BadLocationException {
+                    super.insertString(fb, offset, string, normalizeCharacterAttributes(attr));
+                }
+
+                @Override
+                public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs)
+                        throws BadLocationException {
+                    super.replace(fb, offset, length, text, normalizeCharacterAttributes(attrs));
+                }
+
+                private AttributeSet normalizeCharacterAttributes(AttributeSet attr) {
+                    if (lwc == null) return attr;
+                    Font f = lwc.getFont();
+                    if (f == null) return attr;
+                    MutableAttributeSet normalized = new SimpleAttributeSet(
+                        attr != null ? attr : SimpleAttributeSet.EMPTY);
+                    final String fontName = f.getFontName();
+                    final String fontSize = String.valueOf(f.getSize());
+                    StyleConstants.setFontFamily(normalized, fontName);
+                    StyleConstants.setFontSize(normalized, f.getSize());
+                    Util.styleSheet().addCSSAttribute(normalized, CSS.Attribute.FONT_FAMILY, fontName);
+                    normalized.addAttribute(HTML.Attribute.FACE, fontName);
+                    Util.styleSheet().addCSSAttribute(normalized, CSS.Attribute.FONT_SIZE, fontSize);
+                    normalized.addAttribute(HTML.Attribute.SIZE, fontSize);
+                    return normalized;
+                }
+            });
+        }
     }
 
     LWComponent getLWC() {
@@ -262,8 +336,9 @@ public class RichTextBox extends com.lightdev.app.shtm.SHTMLEditorPane
       zoom *= lwc.getMapScale();
       
       ((SHTMLDocument)getDocument()).setZoomFactor(zoom);
-    
-        super.addNotify();                         
+      setDocumentFont(getEditingFont());
+
+        super.addNotify();
         preAddDimension= new Dimension((int)getWidth(),(int)getHeight());
        // System.out.println(preAddDimension.toString());
        // System.out.println(getPreferredSize().toString());
@@ -406,7 +481,80 @@ public class RichTextBox extends com.lightdev.app.shtm.SHTMLEditorPane
 
     private void setDocumentFont(Font f)
     {
-        
+        if (f == null)
+            return;
+
+        if (DEBUG.TEXT)
+            out("setDocumentFont " + f);
+
+        setFont(f);
+        addDefaultFontRules(f);
+
+        SimpleAttributeSet a = new SimpleAttributeSet();
+        setFontAttributes(a, f);
+        EditorKit kit = getEditorKit();
+        if (kit instanceof StyledEditorKit)
+            ((StyledEditorKit)kit).getInputAttributes().addAttributes(a);
+    }
+
+    private void installFontWeightKeyBindings()
+    {
+        getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_B, Actions.COMMAND), FontWeightUpAction);
+        getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_B, Actions.COMMAND | Actions.SHIFT), FontWeightDownAction);
+        getActionMap().put(FontWeightUpAction, new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                changeFontWeight(true);
+            }
+        });
+        getActionMap().put(FontWeightDownAction, new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                changeFontWeight(false);
+            }
+        });
+
+        // SHTMLEditorPane의 SpaceAction은 &nbsp;를 삽입하고 단락 전체를 HTML로 재조합하므로
+        // 한글 IME 조합 중 자간이 붕괴됩니다. 일반 공백 삽입으로 대체합니다.
+        getActionMap().put(com.lightdev.app.shtm.SHTMLEditorPane.spaceAction, new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                replaceSelection(" ");
+            }
+        });
+    }
+
+    private void changeFontWeight(boolean increase)
+    {
+        if (lwc == null)
+            return;
+
+        int nextWeight = increase
+            ? LWComponent.nextFontWeight(lwc.mFontWeight.get())
+            : LWComponent.previousFontWeight(lwc.mFontWeight.get());
+        lwc.mFontStyle.set(lwc.mFontStyle.get() & ~Font.BOLD);
+        lwc.mFontWeight.set(nextWeight);
+
+        applyOwnerFontToAllText();
+    }
+
+    void applyOwnerFontToAllText()
+    {
+        if (lwc == null)
+            return;
+
+        Font f = lwc.getFont();
+        setDocumentFont(f);
+
+        SimpleAttributeSet a = new SimpleAttributeSet();
+        setFontAttributes(a, f);
+        int selectionStart = getSelectionStart();
+        int selectionEnd = getSelectionEnd();
+        selectAll();
+        applyAttributes(a, false);
+        select(selectionStart, selectionEnd);
+
+        setSize(getPreferredSize());
+        if (lwc.getParent() != null)
+            lwc.getParent().layout();
+        lwc.notify(this, LWKey.Repaint);
     }
 
     private void setDocumentColor(Color c)
@@ -417,7 +565,84 @@ public class RichTextBox extends com.lightdev.app.shtm.SHTMLEditorPane
 
     private static void setFontAttributes(MutableAttributeSet a, Font f)
     {
-       
+        if (f == null)
+            return;
+
+        final String fontName = f.getFontName();
+        final String fontSize = String.valueOf(f.getSize());
+        StyleConstants.setFontFamily(a, fontName);
+        StyleConstants.setFontSize(a, f.getSize());
+        StyleConstants.setItalic(a, f.isItalic());
+        StyleConstants.setBold(a, f.isBold());
+        Util.styleSheet().addCSSAttribute(a, CSS.Attribute.FONT_FAMILY, fontName);
+        a.addAttribute(HTML.Attribute.FACE, fontName);
+        Util.styleSheet().addCSSAttribute(a, CSS.Attribute.FONT_SIZE, fontSize);
+        a.addAttribute(HTML.Attribute.SIZE, fontSize);
+    }
+
+    private Font getEditingFont()
+    {
+        Font baseFont = null;
+        if (lwc != null)
+            baseFont = lwc.getFont();
+        if (baseFont == null)
+            baseFont = getFont();
+        if (baseFont == null)
+            return null;
+
+        Style bodyStyle = ((HTMLDocument)getDocument()).getStyleSheet().getRule("body");
+        if (bodyStyle == null)
+            return baseFont;
+
+        String family = getCSSFontFamily(bodyStyle.getAttribute(CSS.Attribute.FONT_FAMILY));
+        int size = getCSSFontSize(bodyStyle.getAttribute(CSS.Attribute.FONT_SIZE), baseFont.getSize());
+        if (family == null)
+            family = baseFont.getFontName();
+
+        return new Font(family, baseFont.getStyle(), size);
+    }
+
+    private void addDefaultFontRules(Font f)
+    {
+        javax.swing.text.html.StyleSheet styleSheet = ((HTMLDocument)getDocument()).getStyleSheet();
+        String rule = "font-size:" + f.getSize() + ";font-family:" + f.getFontName() + ";";
+        styleSheet.addRule("body {" + rule + "}");
+        styleSheet.addRule("p {" + rule + "}");
+        styleSheet.addRule("ol {" + rule + "}");
+        styleSheet.addRule("ul {" + rule + "}");
+    }
+
+    private static String getCSSFontFamily(Object value)
+    {
+        if (value == null)
+            return null;
+
+        String family = value.toString().trim();
+        int comma = family.indexOf(',');
+        if (comma >= 0)
+            family = family.substring(0, comma).trim();
+        if ((family.startsWith("\"") && family.endsWith("\""))
+            || (family.startsWith("'") && family.endsWith("'")))
+            family = family.substring(1, family.length() - 1).trim();
+
+        return family.length() > 0 ? family : null;
+    }
+
+    private static int getCSSFontSize(Object value, int fallback)
+    {
+        if (value == null)
+            return fallback;
+
+        Matcher matcher = Pattern.compile("(\\d+)").matcher(value.toString());
+        if (matcher.find()) {
+            try {
+                return Integer.parseInt(matcher.group(1));
+            } catch (NumberFormatException e) {
+                return fallback;
+            }
+        }
+
+        return fallback;
     }
 
     /***********
@@ -748,6 +973,27 @@ public class RichTextBox extends com.lightdev.app.shtm.SHTMLEditorPane
         //== false; // reversed logic of below description
     }
 
+    private static boolean isInsertLineBreakKeyPress(KeyEvent e) {
+        return e.getKeyCode() == KeyEvent.VK_ENTER
+            && e.isShiftDown()
+            && !e.isControlDown()
+            && !e.isMetaDown()
+            && !e.isAltDown();
+    }
+
+    private void insertLineBreak() {
+        final int breakPosition = getSelectionStart();
+        Action insertBreak = getActionMap().get(DefaultEditorKit.insertBreakAction);
+        if (insertBreak != null)
+            insertBreak.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, DefaultEditorKit.insertBreakAction));
+        else
+            replaceSelection("\n");
+        setCaretPosition(Math.min(getDocument().getLength(), breakPosition + 1));
+
+        if (getParent() != null)
+            doLayout();
+    }
+
     private Container removeAsEdit() {
         Container parent = getParent();
         if (parent != null)
@@ -772,6 +1018,10 @@ public class RichTextBox extends com.lightdev.app.shtm.SHTMLEditorPane
             getParent().remove(this); // will trigger a save (via focusLost)
             return;
            // setSize(mUnchangedSize); // todo: won't be good enough if we ever resize the actual node as we type
+        } else if (isInsertLineBreakKeyPress(e)) {
+            keyWasPressed = true;
+            e.consume();
+            insertLineBreak();
         } else if (isFinishEditKeyPress(e)) {
             keyWasPressed = true;
             e.consume();

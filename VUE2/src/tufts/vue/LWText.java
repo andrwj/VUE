@@ -111,15 +111,16 @@ public class LWText extends LWComponent {
 		// super(label, 0, 0, shape);
 		super.label = label; // make sure label initially set for debugging
 		// setAsTextNode(true);
-                initText();
+            initText();
 	}
 
     private void initText() {
         //enableProperty(KEY_Alignment);
-       //
-    	disableProperty(LWKey.StrokeColor);
-    	disableProperty(LWKey.StrokeStyle);
-    	disableProperty(LWKey.StrokeWidth);
+        //
+            setFont(LWNode.DEFAULT_TEXT_FONT);
+        disableProperty(LWKey.StrokeColor);
+        disableProperty(LWKey.StrokeStyle);
+        disableProperty(LWKey.StrokeWidth);
         //mShape = new java.awt.geom.Rectangle2D.Float();
     }
 

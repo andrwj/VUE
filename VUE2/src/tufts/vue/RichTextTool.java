@@ -112,6 +112,7 @@ public class RichTextTool extends VueTool
          }
          VUE.getUndoManager().mark("New Rich Text");
          VUE.getSelection().setTo(node);
+         viewer.markTextToolCreatedForSelectionAfterEdit(node);
        //  viewer.activateLabelEdit(node);
         
         return true;

@@ -86,7 +86,7 @@ public class VueUtil extends tufts.Util
                 (DEBUG.Enabled && lowCaseURL.endsWith(".xml")))
             {
                 if (lowCaseURL.startsWith("resource:")) {
-                    // Special case for startup.vue which can be embedded in the classpath
+                    // Open classpath-embedded map resources directly.
                     java.net.URL url = VueResources.getURL(platformURL.substring(9));
                     VUE.displayMap(tufts.vue.action.OpenAction.loadMap(url));
                     return;
@@ -139,7 +139,16 @@ public class VueUtil extends tufts.Util
     }
     
     public static void  setCurrentDirectoryPath(String cdp) {
-        currentDirectoryPath = cdp;
+        currentDirectoryPath = cdp == null ? "" : cdp;
+    }
+
+    public static void setCurrentDirectoryFromFile(File file) {
+        if (file == null)
+            return;
+
+        File parent = file.getAbsoluteFile().getParentFile();
+        if (parent != null && parent.isDirectory())
+            setCurrentDirectoryPath(parent.getAbsolutePath());
     }
     
     public static String getCurrentDirectoryPath() {

@@ -41,7 +41,7 @@
   These properties generally define file and directory names (or paths) that
   affect where the build process stores its outputs.
 -->
-  <property name="version"     value="4.1.0"/>
+  <property name="version"     value="4.1.3"/>
   <property name="top.dir"     value="./.."/>
   <property name="top"     value=".."/>
   <property name="src"         value="${basedir}"/>
@@ -567,6 +567,7 @@
            target="${target.version}"
            encoding="utf-8"
            >
+      <compilerarg value="-Xlint:-options"/>
       <classpath refid="compile.classpath.oki1and2"/>
       <include name="tufts/vue/OsidAsset*.java"/>
       <exclude name="**/tmp/**"/>
@@ -582,6 +583,7 @@
            source="${target.version}"
            target="${target.version}"
            >
+      <compilerarg value="-Xlint:-options"/>
       <classpath refid="compile.classpath.google"/>
       <include name="tufts/google/*.java"/>
       <exclude name="**/tmp/**"/>
@@ -598,6 +600,7 @@
            source="${target.version}"
            target="${target.version}"
            >
+      <compilerarg value="-Xlint:-options"/>
       <classpath refid="compile.classpath.oki"/>
       <include name="tufts/oki/**/*.java"/>
     </javac>
@@ -611,6 +614,7 @@
            source="${target.version}"
            target="${target.version}"
            >
+      <compilerarg value="-Xlint:-options"/>
       <classpath refid="compile.classpath.oki2"/>
       <include name="tufts/oki/repository/fedora/*.java"/>
       <include name="tufts/osid/types/*.java"/>
@@ -628,6 +632,7 @@
            source="${target.version}"
            target="${target.version}"
            >
+      <compilerarg value="-Xlint:-options"/>
       <classpath refid="compile.classpath.vue"/>
       <include name="tufts/artifact/*.java"/>
       <include name="tufts/googleapi/*.java"/>
@@ -648,6 +653,7 @@
            source="${target.version}"
            target="${target.version}"
            >
+      <compilerarg value="-Xlint:-options"/>
       <classpath refid="compile.classpath.vue"/>
       <include name="edu/**/*.java"/>
       <include name="org/**/*.java"/>
@@ -667,6 +673,7 @@
            target="${target.version}"
            verbose="false"
            >
+      <compilerarg value="-Xlint:-options"/>
       <!--classpath refid="compile.cfedoraasspath.vue"/-->
       <include name="tufts/*.java"/>
       <include name="test/**/*.java"/>
@@ -973,6 +980,7 @@
            source="${target.version}"
            target="${target.version}"
            >
+      <compilerarg value="-Xlint:-options"/>
       <include name="maclib/**/*.java"/>
     </javac>
     <jar destfile="${lib.home}/VUE-MacOSX.jar" compress="true" index="false" update="false">
@@ -995,6 +1003,7 @@
            source="${target.version}"
            target="${target.version}"
            >
+      <compilerarg value="-Xlint:-options"/>
       <include name="maclib/MacOSX16Safe.java"/>
       <include name="maclib/MacOSX.java"/>
     </javac>

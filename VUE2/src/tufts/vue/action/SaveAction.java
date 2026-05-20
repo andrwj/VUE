@@ -275,6 +275,7 @@ public class SaveAction extends VueAction
 			// don't know this as not all the above stuff is passing
             // exceptions on to us!
             Log.debug("Save completed for " + file);
+            VueUtil.setCurrentDirectoryFromFile(file);
             if (!VUE.isApplet())
             {
             	VueFrame frame = (VueFrame)VUE.getMainWindow();
@@ -513,7 +514,6 @@ public class SaveAction extends VueAction
 
     
 }
-
 
 
 

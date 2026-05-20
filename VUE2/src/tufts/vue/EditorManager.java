@@ -435,6 +435,27 @@ public class EditorManager
         //} else if (DEBUG.TOOL) out("\tloadEditor: " + source + " -> " + editor + " skipped; null value for " + key);
     }
 
+    public static void applyStyleToFormattingPalette(LWComponent style) {
+        if (style == null || singleton == null)
+            return;
+
+        EditorLoadingUnderway = true;
+        try {
+            for (LWEditor editor : mEditors) {
+                final Object key = editor.getPropertyKey();
+                if (key instanceof LWComponent.Key && style.supportsProperty((LWComponent.Key) key))
+                    singleton.loadEditorWithValue(editor, style.getPropertyValue(key));
+            }
+        } finally {
+            EditorLoadingUnderway = false;
+        }
+
+        for (LWComponent.Key key : LWComponent.Key.AllKeys) {
+            if (UsedStyleQueue.isStyleKey(key) && style.supportsProperty(key))
+                recordPropertyChangeInStyles("used-style", key, style.getPropertyValue(key), true);
+        }
+    }
+
     public static void firePropertyChange(LWEditor editor, Object source) {
         try {
             applySinglePropertyChange(editor.getPropertyKey(), editor.produceValue(), source);

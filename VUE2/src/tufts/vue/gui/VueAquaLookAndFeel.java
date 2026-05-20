@@ -45,11 +45,11 @@ import javax.swing.plaf.ColorUIResource;
 //public class VueAquaLookAndFeel extends com.jidesoft.plaf.aqua.AquaJideLookAndFeel { // JIDE
 public class VueAquaLookAndFeel extends apple.laf.AquaLookAndFeel
 {
-    public final static Font SystemFont = new Font("Pretendard Variable", Font.PLAIN, 13);
-    public final static Font SmallSystemFont = new Font("Pretendard Variable", Font.PLAIN, 11);
-    public final static Font SmallSystemFont12 = new Font("Pretendard Variable", Font.PLAIN, 12);
-    public final static Font MiniSystemFont = new Font("Pretendard Variable", Font.PLAIN, 9);
-    public final static Font EmphasizedMiniSystemFont = new Font("Pretendard Variable", Font.BOLD, 9);
+    public final static Font SystemFont = new Font("Pretendard", Font.PLAIN, 15);
+    public final static Font SmallSystemFont = new Font("Pretendard", Font.PLAIN, 13);
+    public final static Font SmallSystemFont12 = new Font("Pretendard", Font.PLAIN, 14);
+    public final static Font MiniSystemFont = new Font("Pretendard", Font.PLAIN, 11);
+    public final static Font EmphasizedMiniSystemFont = new Font("Pretendard", Font.BOLD, 11);
 
     public String getDescription() { return super.getDescription() + " (VUE Derivative)"; }
     public void initComponentDefaults(UIDefaults table)
@@ -60,7 +60,7 @@ public class VueAquaLookAndFeel extends apple.laf.AquaLookAndFeel
 
         Font font = table.getFont("Label.font");
         //System.out.println("GUI: default label font: " + table.getFont("Label.font"));
-        font = makeFont(font.deriveFont(11f));
+        font = makeFont(font.deriveFont(13f));
         //System.out.println(font);
             
         table.put("Label.font", font);
@@ -77,7 +77,7 @@ public class VueAquaLookAndFeel extends apple.laf.AquaLookAndFeel
 
         Font menuFont = table.getFont("MenuItem.font");
         //System.out.println("GUI: default menu item font " + table.getFont("MenuItem.font"));
-        menuFont = menuFont.deriveFont(13f);
+        menuFont = menuFont.deriveFont(15f);
         table.put("MenuItem.font", menuFont);
         //table.put("MenuItem.foreground", new ColorUIResource(Color.red));
         

@@ -190,9 +190,8 @@ public class VueTwitterPanel extends JPanel implements ItemListener, ActionListe
 		
 	}
 
-	private Thread t = null;
-	
-	@SuppressWarnings("deprecation")
+		private Thread t = null;
+
 	public void actionPerformed(ActionEvent e) {	
 		if (e.getSource().equals(followButton))
 		{
@@ -200,13 +199,17 @@ public class VueTwitterPanel extends JPanel implements ItemListener, ActionListe
 			
 			if (followButton.getText().equals(VueResources.getString("twitter.button.activate")))
 			{
+				twitterThread.startRunning();
 				t = new Thread(twitterThread);
 				t.start();	
 				followButton.setText(VueResources.getString("twitter.button.deactivate"));
 			}
 			else
 			{
-				t.stop();
+				twitterThread.stopRunning();
+				if (t != null)
+					t.interrupt();
+				t = null;
 				followButton.setText(VueResources.getString("twitter.button.activate"));
 			}		
 		}
@@ -232,11 +235,12 @@ public class VueTwitterPanel extends JPanel implements ItemListener, ActionListe
 		}
 	}
 	
-	class TwitterThread implements Runnable
-	{
+		class TwitterThread implements Runnable
+		{
 
-		private static final long UPDATE_INTERVAL = 5000;
-		private HashMap<String,LWNode> fromUserClusterPoints = new HashMap<String,LWNode>();
+			private static final long UPDATE_INTERVAL = 5000;
+			private volatile boolean running = false;
+			private HashMap<String,LWNode> fromUserClusterPoints = new HashMap<String,LWNode>();
 		//private HashMap<String,LWNode> geoClusterPoints = new HashMap<String,LWNode>();
 		private HashMap<String,LWNode> toUserClusterPoints = new HashMap<String,LWNode>();		
 		private HashMap<String,LWNode> analysisClusterPoints = new HashMap<String,LWNode>();		
@@ -298,9 +302,17 @@ public class VueTwitterPanel extends JPanel implements ItemListener, ActionListe
 			
 		}
 		*/
-		private OpenCalaisAnalyzer oca = new OpenCalaisAnalyzer();
-		
-		private LWNode handleAnalysisNode(Tweet tweet)
+			private OpenCalaisAnalyzer oca = new OpenCalaisAnalyzer();
+
+			void startRunning() {
+				running = true;
+			}
+
+			void stopRunning() {
+				running = false;
+			}
+
+			private LWNode handleAnalysisNode(Tweet tweet)
 		{
 			String toAnalyze = tweet.getText();
 			Multimap<String,AnalyzerResult> results = oca.analyzeString(toAnalyze);
@@ -360,10 +372,10 @@ public class VueTwitterPanel extends JPanel implements ItemListener, ActionListe
 		
 		public void run() {
 		
-			twitter = new Twitter();
-			long lastTweet = 0;
-			while (true)
-			{
+				twitter = new Twitter();
+				long lastTweet = 0;
+				while (running)
+				{
 				try {
 					Query q = new Query(mSearchFieldEditor.getText());
 					if (lastTweet > 0)
@@ -443,12 +455,15 @@ public class VueTwitterPanel extends JPanel implements ItemListener, ActionListe
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-				try {   
-		           Thread.sleep(UPDATE_INTERVAL);  
-		        }  
-		        catch (InterruptedException e ) { } 
-			}
-		} //end of run()
+					try {
+				           Thread.sleep(UPDATE_INTERVAL);
+				        }
+			        catch (InterruptedException e ) {
+						if (!running)
+							break;
+			        }
+				}
+			} //end of run()
 		
 
 		 public LWComponent getClusterStyleNode()

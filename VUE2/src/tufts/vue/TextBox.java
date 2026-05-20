@@ -49,6 +49,9 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JTextPane;
 import javax.swing.TransferHandler;
+import javax.swing.Action;
+import javax.swing.AbstractAction;
+import javax.swing.KeyStroke;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.*;
@@ -130,6 +133,8 @@ public class TextBox extends JTextPane
     private MutableAttributeSet mAttributeSet;
     private float mMaxCharWidth;
     private float mMaxWordWidth;
+    private static final String FontWeightUpAction = "vue-font-weight-up";
+    private static final String FontWeightDownAction = "vue-font-weight-down";
     
     private boolean mKeepHeight = false;
     
@@ -167,6 +172,7 @@ public class TextBox extends JTextPane
         addKeyListener(this);
         addFocusListener(this);
         getDocument().addDocumentListener(this);
+        installFontWeightKeyBindings();
         setSize(getPreferredSize());
         if (VueUtil.isWindowsPlatform() && SelectionColor != null)
             setSelectionColor(SelectionColor);
@@ -448,6 +454,59 @@ public class TextBox extends JTextPane
         mKeepHeight = true;
     }
 
+    private float currentDocumentFontSize(float fallback)
+    {
+        try {
+            final AttributeSet a = getStyledDocument().getParagraphElement(0).getAttributes();
+            final int size = StyleConstants.getFontSize(a);
+            return size > 0 ? size : fallback;
+        } catch (Throwable t) {
+            return fallback;
+        }
+    }
+
+    private void installFontWeightKeyBindings()
+    {
+        getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_B, Actions.COMMAND), FontWeightUpAction);
+        getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_B, Actions.COMMAND | Actions.SHIFT), FontWeightDownAction);
+        getActionMap().put(FontWeightUpAction, new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                changeFontWeight(true);
+            }
+        });
+        getActionMap().put(FontWeightDownAction, new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                changeFontWeight(false);
+            }
+        });
+    }
+
+    private void changeFontWeight(boolean increase)
+    {
+        if (lwc == null)
+            return;
+
+        final int nextWeight = increase
+            ? LWComponent.nextFontWeight(lwc.mFontWeight.get())
+            : LWComponent.previousFontWeight(lwc.mFontWeight.get());
+        lwc.mFontStyle.set(lwc.mFontStyle.get() & ~Font.BOLD);
+        lwc.mFontWeight.set(nextWeight);
+
+        final Font nodeFont = lwc.getFont();
+        final Font displayFont;
+        if (preZoomFont != null) {
+            displayFont = nodeFont.deriveFont(nodeFont.getStyle(), currentDocumentFontSize(nodeFont.getSize2D()));
+            preZoomFont = nodeFont;
+        } else {
+            displayFont = nodeFont;
+        }
+
+        setDocumentFont(displayFont);
+        if (getParent() != null)
+            doLayout();
+        lwc.notify(this, LWKey.Repaint);
+    }
+
     private void setDocumentColor(Color c)
     {
         StyleConstants.setForeground(mAttributeSet, c);
@@ -697,6 +756,27 @@ public class TextBox extends JTextPane
         //== false; // reversed logic of below description
     }
 
+    private static boolean isInsertLineBreakKeyPress(KeyEvent e) {
+        return e.getKeyCode() == KeyEvent.VK_ENTER
+            && e.isShiftDown()
+            && !e.isControlDown()
+            && !e.isMetaDown()
+            && !e.isAltDown();
+    }
+
+    private void insertLineBreak() {
+        final int breakPosition = getSelectionStart();
+        Action insertBreak = getActionMap().get(DefaultEditorKit.insertBreakAction);
+        if (insertBreak != null)
+            insertBreak.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, DefaultEditorKit.insertBreakAction));
+        else
+            replaceSelection("\n");
+        setCaretPosition(Math.min(getDocument().getLength(), breakPosition + 1));
+
+        if (getParent() != null)
+            doLayout();
+    }
+
     private Container removeAsEdit() {
         Container parent = getParent();
         if (parent != null)
@@ -717,6 +797,10 @@ public class TextBox extends JTextPane
             getParent().remove(this); // will trigger a save (via focusLost)
             super.setText(mUnchangedText); 
             setSize(mUnchangedSize); // todo: won't be good enough if we ever resize the actual node as we type
+        } else if (isInsertLineBreakKeyPress(e)) {
+            keyWasPressed = true;
+            e.consume();
+            insertLineBreak();
         } else if (isFinishEditKeyPress(e)) {
             keyWasPressed = true;
             e.consume();

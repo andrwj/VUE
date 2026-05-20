@@ -84,10 +84,7 @@ public class LocalFilingManager extends tufts.oki.OsidManager implements osid.fi
         catch (osid.shared.SharedException ex1) {
             throw new osid.filing.FilingException (osid.filing.FilingException.OPERATION_FAILED);
         }
-        catch (osid.OsidException ex3) {
-            throw new osid.filing.FilingException (osid.filing.FilingException.OPERATION_FAILED);
-        }
-        
+
         /*  This code is obsolete now that rootBase is kept by the root Cabinet itself.
         //  Remove final node from root path name.
         String[] parts = this.explodePath(path, root.separatorChar());

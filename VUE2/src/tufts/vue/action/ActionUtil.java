@@ -201,7 +201,7 @@ public class ActionUtil
             } 
             
             if (picked != null)
-                VueUtil.setCurrentDirectoryPath(picked.getParent());
+                VueUtil.setCurrentDirectoryFromFile(picked);
         }
         
         return picked;

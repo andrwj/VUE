@@ -155,7 +155,6 @@ public class VUE
     
     private static boolean isStartupUnderway = false;
     private static java.util.List FilesToOpen = Collections.synchronizedList(new java.util.ArrayList());
-    private static LWMap DefaultStartupMap = null;
 
     private static InspectorPane inspectorPane = null;
     private static FormatPanel formattingPanel; 
@@ -713,7 +712,7 @@ public class VUE
             try {
                 prop = System.getProperty(name);
                 if (DEBUG.INIT) Log.debug("fetched system property " + name + "=[" + prop + "]");
-            } catch (java.security.AccessControlException e) {
+            } catch (SecurityException e) {
                 System.err.println(e);
                 prop = null;
             }
@@ -1479,25 +1478,6 @@ public class VUE
         }
     }
 
-    private static void displayStartupMap()
-    {
-        try {
-            final URL startupURL = VueResources.getURL("resource.startmap");
-            if (startupURL == null)
-                throw new IllegalStateException("resource.startmap was not found");
-            LWMap startupMap = OpenAction.loadMap(startupURL);
-            if (startupMap == null)
-                throw new IllegalStateException("resource.startmap did not produce a map");
-            startupMap.setFile(null);
-            startupMap.markAsSaved();
-            displayMap(startupMap);
-            DefaultStartupMap = startupMap;
-        } catch (Throwable t) {
-            Log.warn("failed to load startup map; creating a new blank map", t);
-            VUE.displayMap(new LWMap(VueResources.getString("vue.main.newmap")));
-        }
-    }
-
     private static final boolean ToolbarAtTopScreen = false && VueUtil.isMacPlatform();
 
     private static void buildApplicationInterface() {
@@ -1737,36 +1717,8 @@ public class VUE
         	if (false) ApplicationFrame.setExtendedState(Frame.MAXIMIZED_BOTH);
                 -------------------------------------------------------*/
 
-        	/*
-        	if (!SKIP_DR) {
-            	LWMap startupMap = null;
-            	try {
-                	final java.net.URL startupURL;
-                	startupURL = VueResources.getURL("resource.startmap");
-                	startupMap = OpenAction.loadMap(startupURL);
-                	startupMap.setFile(null); // dissassociate startup map from it's file so we don't write over it
-                	startupMap.setLabel("Welcome");
-                	startupMap.markAsSaved();
-            	} catch (Exception ex) {
-                	ex.printStackTrace();
-                	VueUtil.alert(null, "Cannot load the Start-up map", "Start Up Map Error");
-            	}
-
-            	try {
-                	if (startupMap != null)
-                    	displayMap(startupMap);
-            	} catch (Exception ex) {
-                	ex.printStackTrace();
-                	VueUtil.alert(null, "Failed to display Start-up Map", "Internal Error");
-            	}
-            
-        	} else {
-            	//pannerTool.setVisible(true);
-        	}
-        	 */
-
         	if (FilesToOpen.size() == 0)
-                displayStartupMap();
+                VUE.displayMap(new LWMap(VueResources.getString("vue.main.newmap")));
 
         	// Generally, we need to wait until java 1.5 JSplitPane's have been validated to
         	// use the % set divider location.  Unfortunately there's a bug in at MacOS java
@@ -3358,10 +3310,7 @@ public class VUE
         if (file == null)
             return;
 
-        if (DefaultStartupMap != null && !DefaultStartupMap.isModified() && DefaultStartupMap.getFile() == null) {
-            closeMap(DefaultStartupMap);
-            DefaultStartupMap = null;
-        }
+        VueUtil.setCurrentDirectoryFromFile(file);
 
         if (VUE.isApplet())
         {
