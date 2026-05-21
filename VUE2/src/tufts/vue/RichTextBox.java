@@ -207,6 +207,21 @@ public class RichTextBox extends com.lightdev.app.shtm.SHTMLEditorPane
         attrs.addAttribute(HTML.Attribute.FACE, fontName);
         Util.styleSheet().addCSSAttribute(attrs, CSS.Attribute.FONT_SIZE, fontSize);
         attrs.addAttribute(HTML.Attribute.SIZE, fontSize);
+
+        if (lwc != null) {
+            Color c = lwc.getTextColor();
+            if (c != null) {
+                final String colorString = "#" + Integer.toHexString(c.getRGB()).substring(2);
+                StyleConstants.setForeground(attrs, c);
+                Util.styleSheet().addCSSAttribute(attrs, CSS.Attribute.COLOR, colorString);
+                attrs.addAttribute(HTML.Attribute.COLOR, colorString);
+            }
+        }
+    }
+
+    @Override
+    public void setBorder(javax.swing.border.Border border) {
+        super.setBorder(null);
     }
 
     @Override
@@ -236,16 +251,26 @@ public class RichTextBox extends com.lightdev.app.shtm.SHTMLEditorPane
                     if (lwc == null) return attr;
                     Font f = lwc.getFont();
                     if (f == null) return attr;
+                    Color c = lwc.getTextColor();
                     MutableAttributeSet normalized = new SimpleAttributeSet(
                         attr != null ? attr : SimpleAttributeSet.EMPTY);
                     final String fontName = f.getFontName();
                     final String fontSize = String.valueOf(f.getSize());
                     StyleConstants.setFontFamily(normalized, fontName);
                     StyleConstants.setFontSize(normalized, f.getSize());
+                    StyleConstants.setItalic(normalized, f.isItalic());
+                    StyleConstants.setBold(normalized, f.isBold());
                     Util.styleSheet().addCSSAttribute(normalized, CSS.Attribute.FONT_FAMILY, fontName);
                     normalized.addAttribute(HTML.Attribute.FACE, fontName);
                     Util.styleSheet().addCSSAttribute(normalized, CSS.Attribute.FONT_SIZE, fontSize);
                     normalized.addAttribute(HTML.Attribute.SIZE, fontSize);
+
+                    if (c != null) {
+                        final String colorString = "#" + Integer.toHexString(c.getRGB()).substring(2);
+                        StyleConstants.setForeground(normalized, c);
+                        Util.styleSheet().addCSSAttribute(normalized, CSS.Attribute.COLOR, colorString);
+                        normalized.addAttribute(HTML.Attribute.COLOR, colorString);
+                    }
                     return normalized;
                 }
             });
@@ -431,6 +456,7 @@ public class RichTextBox extends com.lightdev.app.shtm.SHTMLEditorPane
             mFirstAfterAddNotify = false;
         
         setBorder(null);
+        setOpaque(false);
         if (preZoomFont != null) {
             setDocumentFont(preZoomFont);
             preZoomFont = null;
@@ -1826,19 +1852,7 @@ return super.viewToModel(new Point(alloc));
     
     public String getRichText()
     {
-    	String html = super.getText();
-    	String patternStr = "size=\"(\\d*)\"";
-        String replacementStr = "size=\"$1\" style=\"font-size:$1;\"";
-   
-        // Compile regular expression
-        Pattern pattern = Pattern.compile(patternStr);
-  
-        // Replace all occurrences of pattern in input
-        Matcher matcher = pattern.matcher(html);
-        String output = matcher.replaceAll(replacementStr);
-       
-    	return output;
-    //	return html;
+        return super.getText();
     }
     
     public String getText()
