@@ -1,5 +1,7 @@
 # Visual Understanding Environment (VUE) - 한국어 안내서
 
+![sample drawing](./sample-drawing.png)
+
 VUE(Visual Understanding Environment)는 Tufts University에서 개발한 Java/Swing 기반의 개념 지도(Concept Map), 수업, 발표 도구입니다. 이 저장소의 주 목적은 오래된 VUE 2.x/3.x 계열 소스코드를 최신 Java 런타임인 **OpenJDK 25**에서 다시 빌드하고 실행할 수 있도록 포팅하고 현대화하는 것입니다.
 
 이 문서는 프로젝트의 전체 구조, 포팅 과정에서 해결된 주요 이슈, 한국어 IME 안정화 기법 및 수정/추가된 키보드 단축키 목록을 설명합니다.
@@ -26,9 +28,8 @@ VUE(Visual Understanding Environment)는 Tufts University에서 개발한 Java/S
 | `VUE2/test`                    | JUnit 및 OSID 관련 테스트/검증 코드                                                 |
 | `VUE2/jnilibs`                 | 플랫폼별 네이티브 라이브러리 위치                                                   |
 | `VUE2/MacOS`, `VUE2/src/MacOS` | 구 macOS 패키징 리소스 (Info.plist 등)                                              |
-| `README.md`                    | 영어로 작성된 프로젝트 기본 안내서                                                  |
-| `PORTING.md`                   | OpenJDK 25 포팅 및 각 단계별 문제 정의와 해결 내용을 담은 히스토리 로그             |
-| `KOREAN.md`                    | 한국어 IME(한글 조합 입력) 안정화를 위한 구조적 원인 분석 및 해결 방법 상세 설명서  |
+| `README.md`                    | 한국어로 작성된 프로젝트 기본 안내서                                                |
+| `README.en.md`                 | 영어로 작성된 원래의 프로젝트 기본 안내서                                           |
 
 ---
 
@@ -73,7 +74,7 @@ ant mac
 
 ---
 
-## 5. 한국어 IME 입력 안정화 (`KOREAN.md` 요약)
+## 5. 한국어 IME 입력 안정화
 
 Swing 기반 리치 텍스트 에디터(`SimplyHTML` 에디터 컴포넌트 포함)에서 한글 자간이 뭉개지거나, 공백을 입력할 때 커서 위치가 붕괴되고 폰트 크기가 불일치하는 구조적인 문제를 해결했습니다.
 
