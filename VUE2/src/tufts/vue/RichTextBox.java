@@ -206,7 +206,6 @@ public class RichTextBox extends com.lightdev.app.shtm.SHTMLEditorPane
         Util.styleSheet().addCSSAttribute(attrs, CSS.Attribute.FONT_FAMILY, fontName);
         attrs.addAttribute(HTML.Attribute.FACE, fontName);
         Util.styleSheet().addCSSAttribute(attrs, CSS.Attribute.FONT_SIZE, fontSize);
-        attrs.addAttribute(HTML.Attribute.SIZE, fontSize);
 
         if (lwc != null) {
             Color c = lwc.getTextColor();
@@ -263,7 +262,6 @@ public class RichTextBox extends com.lightdev.app.shtm.SHTMLEditorPane
                     Util.styleSheet().addCSSAttribute(normalized, CSS.Attribute.FONT_FAMILY, fontName);
                     normalized.addAttribute(HTML.Attribute.FACE, fontName);
                     Util.styleSheet().addCSSAttribute(normalized, CSS.Attribute.FONT_SIZE, fontSize);
-                    normalized.addAttribute(HTML.Attribute.SIZE, fontSize);
 
                     if (c != null) {
                         final String colorString = "#" + Integer.toHexString(c.getRGB()).substring(2);
