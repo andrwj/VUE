@@ -41,7 +41,7 @@
   These properties generally define file and directory names (or paths) that
   affect where the build process stores its outputs.
 -->
-  <property name="version"     value="4.1.6"/>
+  <property name="version"     value="4.1.7"/>
   <property name="top.dir"     value="./.."/>
   <property name="top"     value=".."/>
   <property name="src"         value="${basedir}"/>
@@ -1057,6 +1057,7 @@
           <arg value="--type"/> <arg value="app-image"/>
           <arg value="--dest"/> <arg value="build/MacDistJPackage"/>
           <arg value="--name"/> <arg value="VUE"/>
+          <arg value="--app-version"/> <arg value="${version}"/>
           <arg value="--mac-package-name"/> <arg value="VUE"/>
           <arg value="--mac-package-identifier"/> <arg value="tufts.vue.VUE"/>
           <arg value="--input"/> <arg value="build/jpackage-input"/>
@@ -1073,7 +1074,7 @@
           <arg value="--java-options"/> <arg value="-Xmx4096M"/>
       </exec>
 
-      <!-- 2. Info.plist 보완 (CFBundleDisplayName 및 폴더 접근 설명문 주입, CFBundleIconFile 확장자 제거) -->
+      <!-- 2. Info.plist 보완 (CFBundleDisplayName 및 폴더 접근 설명문 주입, 앱 아이콘 결속 보강) -->
       <replace file="build/MacDistJPackage/VUE.app/Contents/Info.plist">
           <replacetoken><![CDATA[<key>CFBundleName</key>
   <string>VUE</string>]]></replacetoken>
@@ -1092,7 +1093,74 @@
           <replacetoken><![CDATA[<key>CFBundleIconFile</key>
   <string>VUE.icns</string>]]></replacetoken>
           <replacevalue><![CDATA[<key>CFBundleIconFile</key>
-  <string>VUE</string>]]></replacevalue>
+  <string>VUE.icns</string>
+  <key>CFBundleIconName</key>
+  <string>VUE</string>
+  <key>CFBundleIcons</key>
+  <dict>
+    <key>CFBundlePrimaryIcon</key>
+    <dict>
+      <key>CFBundleIconFiles</key>
+      <array>
+        <string>VUE</string>
+      </array>
+      <key>CFBundleIconName</key>
+      <string>VUE</string>
+    </dict>
+  </dict>]]></replacevalue>
+      </replace>
+
+      <!-- .vue/.vpk 파일을 Finder의 열기 후보로 결속하려면 jpackage plist에 문서 타입을 재주입해야 합니다. -->
+      <replace file="build/MacDistJPackage/VUE.app/Contents/Info.plist">
+          <replacetoken><![CDATA[</dict>
+</plist>]]></replacetoken>
+          <replacevalue><![CDATA[  <key>CFBundleDocumentTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeName</key>
+      <string>VUE Concept Map</string>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+      <key>CFBundleTypeIconFile</key>
+      <string>VUE.icns</string>
+      <key>CFBundleTypeExtensions</key>
+      <array>
+        <string>vue</string>
+        <string>vpk</string>
+      </array>
+      <key>LSHandlerRank</key>
+      <string>Owner</string>
+      <key>LSItemContentTypes</key>
+      <array>
+        <string>edu.tufts.vue.map</string>
+      </array>
+    </dict>
+  </array>
+  <key>UTExportedTypeDeclarations</key>
+  <array>
+    <dict>
+      <key>UTTypeIdentifier</key>
+      <string>edu.tufts.vue.map</string>
+      <key>UTTypeDescription</key>
+      <string>VUE Concept Map</string>
+      <key>UTTypeIconFile</key>
+      <string>VUE.icns</string>
+      <key>UTTypeConformsTo</key>
+      <array>
+        <string>public.data</string>
+      </array>
+      <key>UTTypeTagSpecification</key>
+      <dict>
+        <key>public.filename-extension</key>
+        <array>
+          <string>vue</string>
+          <string>vpk</string>
+        </array>
+      </dict>
+    </dict>
+  </array>
+</dict>
+</plist>]]></replacevalue>
       </replace>
 
       <!-- 3. macOS LaunchServices 데이터베이스에 강제 등록 -->

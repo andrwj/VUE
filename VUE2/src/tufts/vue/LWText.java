@@ -306,7 +306,7 @@ public class LWText extends LWComponent {
 	       	if ((o.toString().equals("font-size")) ||(o.toString().equals("size")))
 	       	{
 
-	       		int i = Integer.parseInt(paragraphAttributeSet.getAttribute(o).toString());
+	       		int i = getCSSFontSizeValue(o, paragraphAttributeSet.getAttribute(o));
         		return i;
 	       	
 	       	}
@@ -322,13 +322,47 @@ public class LWText extends LWComponent {
 	    
 	      	if ((o.toString().equals("font-size")) ||(o.toString().equals("size")))
         	{
-        		int i = Integer.parseInt(charSet.getAttribute(o).toString());
+        		int i = getCSSFontSizeValue(o, charSet.getAttribute(o));
         		return i;
         	}        		
 	        			
 	    }//done looking at character attributes	        	   	        	        	      
 	    return 12;
 	}
+
+    private static int getCSSFontSizeValue(Object attributeName, Object value)
+    {
+        if (value == null)
+            return 12;
+
+        String text = value.toString().trim();
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("(\\d+)").matcher(text);
+        if (!matcher.find())
+            return 12;
+
+        int size;
+        try {
+            size = Integer.parseInt(matcher.group(1));
+        } catch (NumberFormatException e) {
+            return 12;
+        }
+
+        if (attributeName != null && "size".equals(attributeName.toString())) {
+            // 유지보수: HTML size는 1~7 지수이므로 렌더링 판단용 CSS 크기로 변환합니다.
+            switch (size) {
+                case 1: return 8;
+                case 2: return 10;
+                case 3: return 12;
+                case 4: return 14;
+                case 5: return 18;
+                case 6: return 24;
+                case 7: return 36;
+                default: return size;
+            }
+        }
+
+        return size;
+    }
 
     @Override protected void drawImpl(DrawContext dc)
     {

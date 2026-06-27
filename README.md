@@ -13,7 +13,7 @@ VUE(Visual Understanding Environment)는 Tufts University에서 개발한 Java/S
 현재 개발 환경의 Java 및 빌드 명세는 다음과 같습니다:
 - **Java**: OpenJDK 25.0.2
 - **Ant**: Apache Ant 1.10.17
-- **현재 버전**: `4.1.6` (macOS 패키징 앱 버전 동일)
+- **현재 버전**: `4.1.7` (macOS 패키징 앱 버전 동일)
 
 기존 VUE는 Java 1.4 ~ 1.6 시절의 API, Ant 빌드 설정, macOS 패키징 관례, 브라우저 Applet 연동 및 내부 JDK API에 강하게 의존하고 있었습니다. 본 저장소에서는 이러한 제약 사항들을 소스코드 수준에서 우회하거나 최신 공용 API로 현대화하여 별도의 실행 인자(JVM 옵션) 없이도 안정적으로 구동되는 환경을 구축했습니다.
 

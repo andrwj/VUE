@@ -602,7 +602,7 @@ public class RichTextBox extends com.lightdev.app.shtm.SHTMLEditorPane
         Util.styleSheet().addCSSAttribute(a, CSS.Attribute.FONT_FAMILY, fontName);
         a.addAttribute(HTML.Attribute.FACE, fontName);
         Util.styleSheet().addCSSAttribute(a, CSS.Attribute.FONT_SIZE, fontSize);
-        a.addAttribute(HTML.Attribute.SIZE, fontSize);
+        // 유지보수: HTML size는 1~7 지수라 픽셀 폰트 크기를 넣으면 저장 시 4px 축소가 재발합니다.
     }
 
     private Font getEditingFont()
@@ -670,6 +670,48 @@ public class RichTextBox extends com.lightdev.app.shtm.SHTMLEditorPane
         return fallback;
     }
 
+    private static String getCSSFontSizeValue(Object attributeName, Object value)
+    {
+        if (value == null)
+            return null;
+
+        String fontSize = value.toString();
+        if (attributeName != null && "size".equals(attributeName.toString()))
+            fontSize = htmlFontSizeToCSSFontSize(fontSize);
+
+        return fontSize;
+    }
+
+    private static String htmlFontSizeToCSSFontSize(String value)
+    {
+        if (value == null)
+            return null;
+
+        String trimmed = value.trim();
+        Matcher matcher = Pattern.compile("^(\\d+)$").matcher(trimmed);
+        if (!matcher.matches())
+            return trimmed;
+
+        int htmlSize;
+        try {
+            htmlSize = Integer.parseInt(matcher.group(1));
+        } catch (NumberFormatException e) {
+            return trimmed;
+        }
+
+        // 유지보수: HTML size=4는 CSS 4px가 아니라 legacy 지수이므로 복사 시 실제 크기로 변환합니다.
+        switch (htmlSize) {
+            case 1: return "8";
+            case 2: return "10";
+            case 3: return "12";
+            case 4: return "14";
+            case 5: return "18";
+            case 6: return "24";
+            case 7: return "36";
+            default: return trimmed;
+        }
+    }
+
     /***********
      *******NOTES FROM FONT EDITOR PANEL TO HELP WITH COPY/PASTE OF STYLES.
         globalSizeListener = new ActionListener(){
@@ -689,7 +731,6 @@ public class RichTextBox extends com.lightdev.app.shtm.SHTMLEditorPane
         		SimpleAttributeSet set = new SimpleAttributeSet();
                 Util.styleSheet().addCSSAttribute(set, CSS.Attribute.FONT_SIZE,
             				 textSize);
-                set.addAttribute(HTML.Attribute.SIZE, textSize);
                 lwtext.richLabelBox.applyAttributes(set, false);
                 
         		lwtext.richLabelBox.select(0,0);
@@ -846,8 +887,7 @@ public class RichTextBox extends com.lightdev.app.shtm.SHTMLEditorPane
 	       	if ((o.toString().equals("font-size")) ||(o.toString().equals("size")))
 	       	{
 	       		//Font Size
-	       		Util.styleSheet().addCSSAttribute(set, CSS.Attribute.FONT_SIZE, paragraphAttributeSet.getAttribute(o).toString());
-        		set.addAttribute(HTML.Attribute.SIZE, paragraphAttributeSet.getAttribute(o).toString());
+	       		Util.styleSheet().addCSSAttribute(set, CSS.Attribute.FONT_SIZE, getCSSFontSizeValue(o, paragraphAttributeSet.getAttribute(o)));
 	       	}
 	        			
 	       	else if ((o.toString().equals("font-family")) || (o.toString().equals("font-face")) || (o.toString().equals("face")))
@@ -880,8 +920,7 @@ public class RichTextBox extends com.lightdev.app.shtm.SHTMLEditorPane
         	if ((o.toString().equals("font-size")) ||(o.toString().equals("size")))
         	{
         		//Font Size
-        		Util.styleSheet().addCSSAttribute(set, CSS.Attribute.FONT_SIZE, charSet.getAttribute(o).toString());
-        		set.addAttribute(HTML.Attribute.SIZE, charSet.getAttribute(o).toString());
+        		Util.styleSheet().addCSSAttribute(set, CSS.Attribute.FONT_SIZE, getCSSFontSizeValue(o, charSet.getAttribute(o)));
         	}        		
 	        			
         	if ((o.toString().equals("font-family")) || (o.toString().equals("font-face")) || (o.toString().equals("face")))
