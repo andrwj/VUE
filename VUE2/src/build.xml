@@ -41,7 +41,7 @@
   These properties generally define file and directory names (or paths) that
   affect where the build process stores its outputs.
 -->
-  <property name="version"     value="4.1.5"/>
+  <property name="version"     value="4.1.6"/>
   <property name="top.dir"     value="./.."/>
   <property name="top"     value=".."/>
   <property name="src"         value="${basedir}"/>
@@ -1095,6 +1095,63 @@
       <chmod file="build/${MacDist}/VUE.app/Contents/MacOS/VUE" perm="755"/>
   </target>
 
+  <target name="mac-dist-jpackage" depends="jar" description="Creates a modern macOS VUE.app bundle using JDK jpackage (arm64 optimized)">
+      <delete dir="build/MacDistJPackage"/>
+      <delete dir="build/jpackage-input"/>
+      <mkdir dir="build/jpackage-input"/>
+      <copy file="build/VUE.jar" todir="build/jpackage-input"/>
+      
+      <!-- 1. jpackage 실행 (식별자 옵션 추가) -->
+      <exec executable="jpackage" failonerror="true">
+          <arg value="--type"/> <arg value="app-image"/>
+          <arg value="--dest"/> <arg value="build/MacDistJPackage"/>
+          <arg value="--name"/> <arg value="VUE"/>
+          <arg value="--mac-package-name"/> <arg value="VUE"/>
+          <arg value="--mac-package-identifier"/> <arg value="tufts.vue.VUE"/>
+          <arg value="--input"/> <arg value="build/jpackage-input"/>
+          <arg value="--main-jar"/> <arg value="VUE.jar"/>
+          <arg value="--main-class"/> <arg value="tufts.vue.VUE"/>
+          <arg value="--icon"/> <arg value="MacOS/VUE.icns"/>
+          
+          <!-- JVM 시작 인자 매핑 -->
+          <arg value="--java-options"/> <arg value="-Dapple.laf.useScreenMenuBar=true"/>
+          <arg value="--java-options"/> <arg value="-Dcom.apple.macos.use-file-dialog-packages=true"/>
+          <arg value="--java-options"/> <arg value="-Dcom.apple.macos.useScreenMenuBar=true"/>
+          <arg value="--java-options"/> <arg value="-Dapple.awt.application.name=VUE"/>
+          <arg value="--java-options"/> <arg value="-Dfile.encoding=UTF-8"/>
+          <arg value="--java-options"/> <arg value="-Xmx4096M"/>
+      </exec>
+
+      <!-- 2. Info.plist 보완 (CFBundleDisplayName 및 폴더 접근 설명문 주입, CFBundleIconFile 확장자 제거) -->
+      <replace file="build/MacDistJPackage/VUE.app/Contents/Info.plist">
+          <replacetoken><![CDATA[<key>CFBundleName</key>
+  <string>VUE</string>]]></replacetoken>
+          <replacevalue><![CDATA[<key>CFBundleName</key>
+  <string>VUE</string>
+  <key>CFBundleDisplayName</key>
+  <string>VUE</string>
+  <key>NSDocumentsFolderUsageDescription</key>
+  <string>VUE 개념도를 열고 저장하기 위해 문서 폴더 접근 권한이 필요합니다.</string>
+  <key>NSDesktopFolderUsageDescription</key>
+  <string>VUE 개념도를 열고 저장하기 위해 데스크톱 폴더 접근 권한이 필요합니다.</string>
+  <key>NSDownloadsFolderUsageDescription</key>
+  <string>VUE 개념도를 열고 저장하기 위해 다운로드 폴더 접근 권한이 필요합니다.</string>]]></replacevalue>
+      </replace>
+      <replace file="build/MacDistJPackage/VUE.app/Contents/Info.plist">
+          <replacetoken><![CDATA[<key>CFBundleIconFile</key>
+  <string>VUE.icns</string>]]></replacetoken>
+          <replacevalue><![CDATA[<key>CFBundleIconFile</key>
+  <string>VUE</string>]]></replacevalue>
+      </replace>
+
+      <!-- 3. macOS LaunchServices 데이터베이스에 강제 등록 -->
+      <exec executable="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister" failonerror="true">
+          <arg value="-f"/>
+          <arg value="build/MacDistJPackage/VUE.app"/>
+      </exec>
+      <echo message="VUE.app has been registered to macOS LaunchServices successfully."/>
+  </target>
+
     <target name="test" depends="mac-dist"/>
 
 
@@ -1148,7 +1205,7 @@ cclass Version {
 
 <!-- ==================== Tasks to run VUE  ================================ -->
 
-    <target name="vue" depends="" description="Run the VUE application">
+    <target name="vue" depends="compile" description="Run the VUE application">
       <java classname="tufts.vue.VUE" failonerror="true" fork="true">
         <!--jvmarg value="-verbosegc"/-->
         <!-- Start with min of 10MB (VUE uses this much just starting up) -->
@@ -1162,7 +1219,7 @@ cclass Version {
         <classpath refid="runtime.classpath"/>
       </java>
     </target>
-	 <target name="vue_fr" depends="" description="Run the VUE application">
+	 <target name="vue_fr" depends="compile" description="Run the VUE application">
 	      <java classname="tufts.vue.VUE" failonerror="true" fork="true">
 	      	<jvmarg value="-Duser.language=fr" />
 	      	<jvmarg value="-Duser.region=FR" />
@@ -1196,7 +1253,7 @@ cclass Version {
     </target>
     
     
-    <target name="vue-vanilla" depends="" description="Run the VUE application (Do NOT install custom VUE Look and Feels)">
+    <target name="vue-vanilla" depends="compile" description="Run the VUE application (Do NOT install custom VUE Look and Feels)">
         <java classname="tufts.vue.VUE" failonerror="true" fork="true">
           <jvmarg value="-Dapple.laf.useScreenMenuBar=true"/>
           <jvmarg value="-Dcom.apple.mrj.application.apple.menu.about.name=VUE"/>
@@ -1205,7 +1262,7 @@ cclass Version {
         </java>
     </target>
     
-    <target name="vue-mac-metal" depends="" description="Run the VUE application (Mac Brushed Metal LAF)">
+    <target name="vue-mac-metal" depends="compile" description="Run the VUE application (Mac Brushed Metal LAF)">
         <java classname="tufts.vue.VUE" failonerror="true" fork="true">
           <jvmarg value="-Dapple.laf.useScreenMenuBar=true"/>
           <jvmarg value="-Dcom.apple.mrj.application.apple.menu.about.name=VUE"/>
@@ -1214,7 +1271,7 @@ cclass Version {
         </java>
     </target>
 
-    <target name="vue-mac-metal-vanilla" depends="" description="Run the VUE application (Mac Brushed Metal LAF, No Customizations)">
+    <target name="vue-mac-metal-vanilla" depends="compile" description="Run the VUE application (Mac Brushed Metal LAF, No Customizations)">
         <java classname="tufts.vue.VUE" failonerror="true" fork="true">
           <jvmarg value="-Dapple.laf.useScreenMenuBar=true"/>
           <jvmarg value="-Dcom.apple.mrj.application.apple.menu.about.name=VUE"/>
@@ -1224,21 +1281,21 @@ cclass Version {
         </java>
     </target>
 
-    <target name="vue-win-native" depends="" description="Run VUE - Windows Only (Windows Native LAF, No VUE Theme possible)">
+    <target name="vue-win-native" depends="compile" description="Run VUE - Windows Only (Windows Native LAF, No VUE Theme possible)">
         <java classname="tufts.vue.VUE" failonerror="true" fork="true">
           <arg value="-nativeWindowsLookAndFeel"/>
           <classpath refid="runtime.classpath"/>
         </java>
     </target>
     
-    <target name="vue-win-force-metal" depends="" description="Run VUE - Windows Only (Force the java 1.4 Metal Theme, skipping java 1.5 Ocean Theme)">
+    <target name="vue-win-force-metal" depends="compile" description="Run VUE - Windows Only (Force the java 1.4 Metal Theme, skipping java 1.5 Ocean Theme)">
         <java classname="tufts.vue.VUE" failonerror="true" fork="true">
           <arg value="-skip_ocean_theme"/>
           <classpath refid="runtime.classpath"/>
         </java>
     </target>
     
-    <target name="vue-dr" depends="" description="Run just the VUE Digital Repository GUI">
+    <target name="vue-dr" depends="compile" description="Run just the VUE Digital Repository GUI">
         <java classname="tufts.vue.DRBrowser" failonerror="true" fork="true">
           <jvmarg value="-Xmx1024m"/>
           <jvmarg value="-Dapple.laf.useScreenMenuBar=true"/>
@@ -1248,7 +1305,7 @@ cclass Version {
         </java>
     </target>
     
-    <target name="vue-nv" depends="" description="Run the NarraVision demo (Mac)">
+    <target name="vue-nv" depends="compile" description="Run the NarraVision demo (Mac)">
       <pathconvert pathsep=":" property="classpath.nv" refid="runtime.classpath"/>
         <java classname="tufts.vue.VUE" failonerror="true" fork="true">
           <jvmarg value="-Dapple.laf.useScreenMenuBar=true"/>

@@ -191,6 +191,8 @@ public class LWText extends LWComponent {
 	
     protected void drawNode(DrawContext dc) {
         // -------------------------------------------------------
+
+
         // Fill the shape (if it's not transparent)
         // -------------------------------------------------------
 
@@ -427,6 +429,8 @@ public class LWText extends LWComponent {
 
 	protected void drawLabel(DrawContext dc) {
 		//float lx = 0;//relativeLabelX();
+
+
 		//float ly = 0;//relativeLabelY();
 		//dc.g.translate(lx, ly);
 		// if (DEBUG.CONTAINMENT) System.out.println("*** " + this + " drawing
@@ -597,6 +601,8 @@ public class LWText extends LWComponent {
 	    void setLabel0(String newLabel, boolean setDocument)
 	    {
 	        Object old = this.label;
+
+
 	        if (this.label == newLabel)
 	            return;
 	        if (this.label != null && this.label.equals(newLabel))

@@ -414,6 +414,7 @@ public class RichTextBox extends com.lightdev.app.shtm.SHTMLEditorPane
     public void removeNotify()
     {
         if (TestDebug||DEBUG.TEXT) out("*** REMOVENOTIFY ***");
+
         
         //------------------------------------------------------------------
         // We need to clear any text selection here as a workaround
@@ -1076,10 +1077,9 @@ public class RichTextBox extends com.lightdev.app.shtm.SHTMLEditorPane
      */
     public void focusLost(FocusEvent e)
     {
-    
-	    
-	   
     	final java.awt.Component opposite = e.getOppositeComponent();
+
+
       
         
     	if (opposite != null) {
@@ -1691,6 +1691,7 @@ return super.viewToModel(new Point(alloc));
     public void draw(DrawContext dc)
     {
         if (TestDebug) out("draw");
+
 
         if (getParent() != null)
             System.err.println("Warning: 2nd draw of an AWT drawn component!");
