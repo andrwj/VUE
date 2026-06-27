@@ -1046,56 +1046,7 @@
   </target>
  
 
-  <target name="mac-dist" depends="jar" description="Creates a Mac OS X distributable Applcation directory for VUE">
-      <taskdef name="bundleapp"               
-              classpath="${lib.home}/appbundler-1.0ea.jar"
-              classname="com.oracle.appbundler.AppBundlerTask"/>
-      <mkdir dir="build/${MacDist}"/>      
-
-      <property environment="env" />
-      <bundleapp 
-                outputdirectory="build/${MacDist}"
-                name="VUE"
-                displayname="VUE"
-                executableName="VUE"
-                identifier="tufts.vue.VUE"
-                shortversion="${version}"
-                version="${version}"
-                icon="MacOS/VUE.icns"
-                mainclassname="tufts.vue.VUE"
-                copyright="2003-2020"
-                applicationCategory="public.app-category.finance">
-                <classpath file="${build.home}/VUE.jar"/>
-                <bundleDocument
-                  name="VUE Concept Map"
-                  role="Editor"
-                  handlerRank="Owner"
-                  extensions="vue,vpk"
-                  contentTypes="edu.tufts.vue.map"
-                  icon="MacOS/VUE.icns"/>
-                <typeDeclaration
-                  identifier="edu.tufts.vue.map"
-                  description="VUE Concept Map"
-                  conformsTo="public.xml"
-                  extensions="vue,vpk"
-                  mimeTypes="application/x-vue"
-                  icon="MacOS/VUE.icns"/>
-                <option value="-Dapple.laf.useScreenMenuBar=true"/>
-                <option value="-Dcom.apple.macos.use-file-dialog-packages=true"/>
-                <option value="-Dcom.apple.macos.useScreenMenuBar=true"/>
-                <option value="-Dapple.awt.application.name=VUE"/>
-                <option value="-Dsun.java2d.d3d=false"/>
-                <option value="-Dcom.apple.smallTabs=true"/>
-                <option value="-Dfile.encoding=UTF-8"/>
-                <option value="-Xmx4096M"/>
-                
-
-      </bundleapp>
-      <copy file="${universalstub}" tofile="build/${MacDist}/VUE.app/Contents/MacOS/VUE" overwrite="true"/>
-      <chmod file="build/${MacDist}/VUE.app/Contents/MacOS/VUE" perm="755"/>
-  </target>
-
-  <target name="mac-dist-jpackage" depends="jar" description="Creates a modern macOS VUE.app bundle using JDK jpackage (arm64 optimized)">
+  <target name="mac-dist" depends="jar" description="Creates a modern macOS VUE.app bundle using JDK jpackage (arm64 optimized)">
       <delete dir="build/MacDistJPackage"/>
       <delete dir="build/jpackage-input"/>
       <mkdir dir="build/jpackage-input"/>

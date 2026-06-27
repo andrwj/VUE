@@ -21,8 +21,8 @@ fi
 
 # 2. Java AppBundler가 사용하는 macOS 유저 라이브러리 캐시 디렉토리 삭제
 # (OS 캐싱으로 인한 구버전 JVM/클래스 참조 방지)
-rm -rf ~/Library/Caches/VUE
-rm -rf ~/Library/Caches/tufts.vue.VUE
+sudo rm -rf ~/Library/Caches/VUE
+sudo rm -rf ~/Library/Caches/tufts.vue.VUE
 echo " -> [성공] Java 애플리케이션 캐시 디렉토리가 삭제되었습니다."
 
 echo "🧹 [2/4] 이전 빌드 잔재 정리 (ant clean)..."
@@ -33,8 +33,8 @@ ant clean
 echo "⚙️ [3/4] 소스코드 컴파일 (ant compile)..."
 ant compile
 
-echo "📦 [4/4] macOS 앱 번들 갱신 및 패키징 (ant mac-dist-jpackage)..."
-ant mac-dist-jpackage
+echo "📦 [4/4] macOS 앱 번들 갱신 및 패키징 (ant mac-dist)..."
+ant mac-dist
 
 echo "✨ [완료] 빌드 및 캐시 클린업이 성공적으로 끝났습니다!"
 echo "새로운 VUE.app 실행 경로: build/MacDistJPackage/VUE.app"
@@ -48,21 +48,21 @@ sleep 1
 
 echo "🚀 [6/6] VUE.app을 /Applications로 배포 및 시스템 전역 등록..."
 # 프로세스명만으로 안전하게 선별 종료합니다.
-pkill -9 VUE || true
+sudo pkill -9 VUE || true
 # 기존 폴더 덮어쓰기 에러를 예방하기 위해 먼저 깔끔하게 삭제합니다.
-rm -rf /Applications/VUE.app
-cp -R build/MacDistJPackage/VUE.app /Applications/
+sudo rm -rf /Applications/VUE.app
+sudo cp -a build/MacDistJPackage/VUE.app /Applications/
 
 # macOS TCC(보안 승인) 모듈이 앱의 Identity를 인지하여 권한 팝업을 정상 띄우도록 로컬 ad-hoc 서명을 적용합니다.
 echo " -> 로컬 ad-hoc 코드 서명 중..."
-codesign --force --deep -s - /Applications/VUE.app
+sudo codesign --force --deep -s - /Applications/VUE.app
 
 # Gatekeeper 차단을 막기 위해 다운로드/격리 속성을 명시적으로 소거합니다.
 echo " -> 격리 속성(Quarantine) 해제 중..."
-xattr -r -d com.apple.quarantine /Applications/VUE.app || true
+sudo xattr -r -d com.apple.quarantine /Applications/VUE.app || true
 
 if [ -f "/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister" ]; then
-    /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f /Applications/VUE.app
+    sudo /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f /Applications/VUE.app
 fi
 
 open /Applications/VUE.app || true
